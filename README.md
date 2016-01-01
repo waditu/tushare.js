@@ -1,1 +1,1 @@
-# github-api-isomorphic
+# tushare.js
