@@ -1,5 +1,4 @@
 import request from 'superagent';
-import { K_LABELS, K_MIN_LABELS } from './cons';
 import { priceUrl } from './urls';
 import { codeToSymbol } from './util';
 
