@@ -1,5 +1,5 @@
 import request from 'superagent-charset';
-import { priceUrl, tickUrl } from './urls';
+import { priceUrl, tickUrl, todayAllUrl } from './urls';
 import { codeToSymbol } from './util';
 
 /**
@@ -81,6 +81,45 @@ export function getTick(options, cb) {
             ret.push(line.split('\t'));
           }
         });
+        cb(null, ret);
+      } else {
+        cb(null, []);
+      }
+    });
+}
+
+/**
+ * getTodayAll - 一次性获取最近一个日交易日所有股票的交易数据
+ * 返回数据格式：代码，名称，涨跌幅，现价，开盘价，最高价，最低价，最日收盘价，成交量，换手率
+ *
+ * @param options - (可选) 若为空，则返回A股市场今日所有数据
+ * @param {Number} options.pageSize - 分页的大小，如：80， 默认10000，即返回所有数据
+ * @param {Number} options.pageNo - 分页页码，默认1
+ * @param cb
+ * @return {undefined}
+ */
+export function getTodayAll(options, cb) {
+  const defaults = {
+    pageSize: 10000,
+    pageNo: 1
+  };
+  if(Object.prototype.toString.apply(options) === '[object Function]') {
+    cb = options;
+    options = {};
+  }
+  options = Object.assign(defaults, options);
+
+  const url = todayAllUrl(options.pageSize, options.pageNo);
+
+  request
+    .get(url)
+    .charset('gbk')
+    .buffer()
+    .end(function(err, res) {
+      if(err || !res.ok) {
+        cb(err);
+      } else if(res.text) {
+        let ret = eval(res.text);
         cb(null, ret);
       } else {
         cb(null, []);
