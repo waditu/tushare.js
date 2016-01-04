@@ -15,3 +15,8 @@ export function todayAllUrl(pageSize, pageNo) {
   const url = `http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?num=${pageSize}&sort=changepercent&asc=0&node=hs_a&symbol=&_s_r_a=page&page=${pageNo}`
   return url;
 }
+
+export function liveDataUrl(symbols) {
+  const url = `http://hq.sinajs.cn/list=${symbols.join(',')}`;
+  return url;
+}

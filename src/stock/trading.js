@@ -1,5 +1,5 @@
 import request from 'superagent-charset';
-import { priceUrl, tickUrl, todayAllUrl } from './urls';
+import { priceUrl, tickUrl, todayAllUrl, liveDataUrl } from './urls';
 import { codeToSymbol } from './util';
 
 /**
@@ -120,6 +120,81 @@ export function getTodayAll(options, cb) {
         cb(err);
       } else if(res.text) {
         let ret = eval(res.text);
+        cb(null, ret);
+      } else {
+        cb(null, []);
+      }
+    });
+}
+
+/**
+ * getLiveData - 获取实时交易数据
+ * 返回数据：{Array}
+ * 0：股票代码
+ * 1：股票名字
+ * 2：今日开盘价
+ * 3：昨日收盘价
+ * 4：当前价格
+ * 5：今日最高价
+ * 6：今日最低价
+ * 7：竞买价，即“买一”报价
+ * 8：竞卖价，即“卖一”报价
+ * 9：成交量 maybe you need do volume/100
+ * 10：成交金额（元 CNY）
+ * 11：委买一（笔数 bid volume）
+ * 12：委买一（价格 bid price）
+ * 13：“买二”
+ * 14：“买二”
+ * 15：“买三”
+ * 16：“买三”
+ * 17：“买四”
+ * 18：“买四”
+ * 19：“买五”
+ * 20：“买五”
+ * 21：委卖一（笔数 ask volume）
+ * 22：委卖一（价格 ask price）
+ * ...
+ * 31：日期；
+ * 32：时间；
+ *
+ * @param {Object} options
+ * @param {Array} options.codes - 股票代码数组，例如['600848', '600000', '600343']
+ * @param cb
+ * @return {undefined}
+ */
+export function getLiveData(options, cb) {
+  const defaults = {
+    codes: [600000]
+  };
+  if(Object.prototype.toString.apply(options) === '[object Function]') {
+    cb = options;
+    options = {};
+  }
+  options = Object.assign(defaults, options);
+
+  const codes = options.codes.map(function(code) {
+    return codeToSymbol(code);
+  });
+
+  const url = liveDataUrl(codes);
+
+  request
+    .get(url)
+    .charset('gbk')
+    .buffer()
+    .end(function(err, res) {
+      if(err || !res.ok) {
+        cb(err);
+      } else if(res.text) {
+        const ret = res.text.split('\n').filter(function(tmpStr) {
+          return tmpStr !== '';
+        }).map(function(codeStr) {
+          const matches = codeStr.match(/(sz|sh)(\d{6}).*\"(.*)\"/i);
+          const symbol = matches[1] + matches[2];
+          let data = matches[3].split(',');
+          data.unshift(symbol);
+          return data;
+        });
         cb(null, ret);
       } else {
         cb(null, []);
