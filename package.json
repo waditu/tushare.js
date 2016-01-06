@@ -24,6 +24,7 @@
   "homepage": "https://github.com/ruanyl/tushare.js#readme",
   "dependencies": {
     "js-base64": "^2.1.9",
+    "moment": "^2.11.0",
     "superagent": "^1.6.1",
     "superagent-charset": "^0.1.1"
   },

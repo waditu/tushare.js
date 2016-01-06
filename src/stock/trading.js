@@ -1,11 +1,14 @@
 import request from 'superagent-charset';
+import moment from 'moment';
 import {
   priceUrl,
   tickUrl,
   todayAllUrl,
   liveDataUrl,
   todayTickUrl,
-  indexUrl } from './urls';
+  indexUrl,
+  sinaDDUrl
+} from './urls';
 import { codeToSymbol } from './util';
 
 /**
@@ -170,7 +173,7 @@ export function getTodayAll(options, cb) {
  */
 export function getLiveData(options, cb) {
   const defaults = {
-    codes: [600000]
+    codes: ['600000']
   };
   if(Object.prototype.toString.apply(options) === '[object Function]') {
     cb = options;
@@ -235,7 +238,7 @@ export function getLiveData(options, cb) {
  */
 export function getTodayTick(options, cb) {
   const defaults = {
-    code: 600000,
+    code: '600000',
     end: '15:00:00'
   };
   if(Object.prototype.toString.apply(options) === '[object Function]') {
@@ -287,6 +290,70 @@ export function getIndex(cb) {
             low: data[5],
             volume: data[8],
             amount: data[9]
+          };
+        });
+        cb(null, ret);
+      } else {
+        cb(null, []);
+      }
+    });
+}
+
+/**
+ * getSinaDD - 获取新浪大单数据
+ * 返回数组：
+ * [
+ *  {
+ *    symbol: 股票代码
+ *    name: 股票名字
+ *    time: 时间
+ *    price: 成交价格
+ *    volume: 成交量（手）
+ *    preprice: 前一价格
+ *    type: 类型，买盘、卖盘、中性盘
+ *  }
+ * ]
+ *
+ * @param {Object} options
+ * @param {String} options.code - 六位股票代码
+ * @param {String} options.volume - 设置多少手以上算大单，例如: 400，则返回400手以上交易量的大单
+ * @param {String} options.date - 日期，格式YYYY-MM-DD， 默认当日日期
+ * @param cb
+ * @return {undefined}
+ */
+export function getSinaDD(options, cb) {
+  const defaults = {
+    code: '600000',
+    volume: 400,
+    date: moment().format('YYYY-MM-DD')
+  };
+  if(Object.prototype.toString.apply(options) === '[object Function]') {
+    cb = options;
+    options = {};
+  }
+  options = Object.assign(defaults, options);
+  const url = sinaDDUrl(codeToSymbol(options.code), options.volume * 100, options.date);
+
+  request
+    .get(url)
+    .charset('gbk')
+    .buffer()
+    .end(function(err, res) {
+      if(err || !res.ok) {
+        cb(err);
+      } else if(res.text) {
+        const ret = res.text.split('\n').filter(function(tmpStr, idx) {
+          return tmpStr !== '' && idx !== 0;
+        }).map(function(ddStr) {
+          const ddArr = ddStr.split(',');
+          return {
+            symbol: ddArr[0],
+            name: ddArr[1],
+            time: ddArr[2],
+            price: ddArr[3],
+            volume: ddArr[4] / 100,
+            preprice: ddArr[5],
+            type: ddArr[6]
           };
         });
         cb(null, ret);
