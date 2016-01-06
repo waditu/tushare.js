@@ -1,5 +1,5 @@
 import request from 'superagent-charset';
-import { priceUrl, tickUrl, todayAllUrl, liveDataUrl } from './urls';
+import { priceUrl, tickUrl, todayAllUrl, liveDataUrl, todayTickUrl } from './urls';
 import { codeToSymbol } from './util';
 
 /**
@@ -196,6 +196,58 @@ export function getLiveData(options, cb) {
           return data;
         });
         cb(null, ret);
+      } else {
+        cb(null, []);
+      }
+    });
+}
+
+/**
+ * getTodayTick - 获取当日分笔明细数据，用于在交易进行的时候获取
+ * 返回数据：
+ * {
+ *  begin: 开始时间,
+ *  end: 结束时间,
+ *  zhubi_list: [
+ *    {
+ *      TRADE_TYPE: 交易类型, 1: 买盘，0：中性盘，-1：卖盘
+ *      PRICE_PRE: 上一档价格
+ *      PRICE: 当前价格
+ *      VOLUME_INC: 成交量(股)
+ *      TURNOVER_INC: 成交额
+ *      TRADE_TYPE_STR: 交易类型：买盘、卖盘、中性盘
+ *      DATE_STR: 时间
+ *    }
+ *  ]
+ * }
+ *
+ * @param {Object} options
+ * @param {String} options.code - 六位股票代码
+ * @param {String} options.end - 结束时间。例如：15:00:00, 那么就会获取14:55:00 - 15:00:00之间的分笔数据，也就是end指定时间之前的五分钟
+ * @param cb
+ * @return {undefined}
+ */
+export function getTodayTick(options, cb) {
+  const defaults = {
+    code: 600000,
+    end: '15:00:00'
+  };
+  if(Object.prototype.toString.apply(options) === '[object Function]') {
+    cb = options;
+    options = {};
+  }
+  options = Object.assign(defaults, options);
+
+  const url = todayTickUrl(options.code, options.end);
+
+  request
+    .get(url)
+    .charset('gbk')
+    .end(function(err, res) {
+      if(err || !res.ok) {
+        cb(err);
+      } else if(res.text) {
+        cb(null, JSON.parse(res.text));
       } else {
         cb(null, []);
       }

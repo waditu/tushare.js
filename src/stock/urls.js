@@ -20,3 +20,8 @@ export function liveDataUrl(symbols) {
   const url = `http://hq.sinajs.cn/list=${symbols.join(',')}`;
   return url;
 }
+
+export function todayTickUrl(code, end = '15:00:00') {
+  const url = `http://quotes.money.163.com/service/zhubi_ajax.html?symbol=${code}&end=${end}`;
+  return url;
+}
