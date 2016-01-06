@@ -1,12 +1,13 @@
 {
   "name": "tushare.js",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "port of tushare for nodejs",
   "main": "lib/index.js",
   "scripts": {
     "test": "./node_modules/tape/bin/tape test/**/*.js  | tap-spec",
     "build": "./node_modules/babel-cli/bin/babel.js src --out-dir lib",
-    "build:watch": "./node_modules/babel-cli/bin/babel.js src --out-dir lib --watch"
+    "build:watch": "./node_modules/babel-cli/bin/babel.js src --out-dir lib --watch",
+    "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
