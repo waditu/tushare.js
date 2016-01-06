@@ -35,3 +35,8 @@ export function sinaDDUrl(symbol, volume, date) {
   const url = `http://vip.stock.finance.sina.com.cn/quotes_service/view/cn_bill_download.php?symbol=${symbol}&num=60&page=1&sort=ticktime&asc=0&volume=${volume}&amount=0&type=0&day=${date}`;
   return url;
 }
+
+export function sinaIndustryIndexUrl() {
+  const url = `http://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php`;
+  return url;
+}
