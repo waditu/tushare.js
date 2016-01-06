@@ -8,7 +8,6 @@ test('Get Tick Data', function(t) {
     end: '15:00:00'
   };
   tushare.stock.getTodayTick(options, function(err, data) {
-    console.log(data);
     t.ok(Object.prototype.toString.apply(data) === '[object Object]', 'It should return the object of today tock price');
     t.ok(data.end === options.end, 'It should has the same end time as specified in options');
     t.ok(Object.prototype.toString.apply(data.zhubi_list) === '[object Array]', 'It should return an array of ticks');
