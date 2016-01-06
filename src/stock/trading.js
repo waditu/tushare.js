@@ -1,5 +1,11 @@
 import request from 'superagent-charset';
-import { priceUrl, tickUrl, todayAllUrl, liveDataUrl, todayTickUrl } from './urls';
+import {
+  priceUrl,
+  tickUrl,
+  todayAllUrl,
+  liveDataUrl,
+  todayTickUrl,
+  indexUrl } from './urls';
 import { codeToSymbol } from './util';
 
 /**
@@ -248,6 +254,42 @@ export function getTodayTick(options, cb) {
         cb(err);
       } else if(res.text) {
         cb(null, JSON.parse(res.text));
+      } else {
+        cb(null, []);
+      }
+    });
+}
+
+export function getIndex(cb) {
+  const url = indexUrl();
+
+  request
+    .get(url)
+    .charset('gbk')
+    .buffer()
+    .end(function(err, res) {
+      if(err || !res.ok) {
+        cb(err);
+      } else if(res.text) {
+        const ret = res.text.split('\n').filter(function(tmpStr) {
+          return tmpStr !== '';
+        }).map(function(codeStr) {
+          const matches = codeStr.match(/(sz|sh)(\d{6}).*\"(.*)\"/i);
+          const symbol = matches[1] + matches[2];
+          let data = matches[3].split(',');
+          return {
+            code: symbol,
+            name: data[0],
+            open: data[1],
+            preclose: data[2],
+            close: data[3],
+            high: data[4],
+            low: data[5],
+            volume: data[8],
+            amount: data[9]
+          };
+        });
+        cb(null, ret);
       } else {
         cb(null, []);
       }
