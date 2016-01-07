@@ -145,3 +145,31 @@ tushare.stock.getSinaDD(options, function(err, data) {
   volume: (手)默认400，返回大于xx手的大单数据
 }
 ```
+
+## 行业分类数据
+
+## 1. 获取新浪行业分类信息
+比如：房地产、电子信息、钢铁行业等等新浪行业分类信息
+```
+tushare.stock.getSinaIndustryClassified(function(err, data) {
+  console.log(data);
+});
+```
+
+## 2. 获取新浪某个行业分类的具体信息：所包含的股票及其交易信息
+这里的tag是分类行业分类的tag，可以从上一个接口：tushare.stock.getSinaIndustryClassified获得
+```
+var options = {
+  tag: 'new_jrhy'
+};
+tushare.stock.getSinaClassifyDetails(options, function(err, data) {
+  console.log(data);
+});
+```
+
+`options` 参数说明：
+```
+{
+  tag: 新浪行业代码
+}
+```
