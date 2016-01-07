@@ -1,6 +1,7 @@
 import request from 'superagent-charset';
 import {
-  sinaIndustryIndexUrl
+  sinaIndustryIndexUrl,
+  classifyDetailUrl
 } from './urls';
 import { codeToSymbol } from './util';
 
@@ -52,6 +53,74 @@ export function getSinaIndustryClassified(cb) {
           });
         }
 
+        cb(null, ret);
+      } else {
+        cb(null, []);
+      }
+    });
+}
+
+/**
+ * getClassifyDetails - 获取新浪某个行业分类下的股票数据
+ * 返回数组:
+ * [
+ *  {
+ *    symbol: 股票代码
+ *    name: 股票名称
+ *    price: 当前价格
+ *    changePrice: 涨跌额
+ *    changePercent: 涨跌幅
+ *    open: 开盘价
+ *    high: 最高价
+ *    low: 最低价
+ *    volume: 成交量（手）
+ *    amount: 成交额（万）
+ *    tickTime: 数据时间
+ *  }
+ * ]
+ *
+ * @param {Object} options
+ * @param {string} options.tag - 新浪行业代码，从getSinaIndustryClassified返回，例如new_jrhy: 金融行业
+ * @param cb
+ * @return {undefined}
+ */
+export function getSinaClassifyDetails(options, cb) {
+  const defaults = {
+    tag: 'new_jrhy' // 默认金融行业
+  };
+  if(Object.prototype.toString.apply(options) === '[object Function]') {
+    cb = options;
+    options = {};
+  }
+  options = Object.assign(defaults, options);
+  const url = classifyDetailUrl(options.tag);
+
+  request
+    .get(url)
+    .charset('gbk')
+    .buffer()
+    .end(function(err, res) {
+      if(err || !res.ok) {
+        cb(err);
+      } else if(res.text) {
+        let ret = eval(res.text);
+        if(ret) {
+          ret = ret.map(function(ele) {
+            return {
+              symbol: ele.symbol,
+              name: ele.name,
+              price: ele.trade,
+              changePrice: ele.pricechange,
+              changePercent: ele.changepercent,
+              open: ele.open,
+              high: ele.high,
+              low: ele.low,
+              volume: ele.volume / 100,
+              amount: ele.amount / 10000,
+              tickTime: ele.ticktime
+            };
+          });
+        }
         cb(null, ret);
       } else {
         cb(null, []);
