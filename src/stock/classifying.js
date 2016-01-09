@@ -1,7 +1,8 @@
 import request from 'superagent-charset';
 import {
   sinaIndustryIndexUrl,
-  sinaClassifyDetailUrl
+  sinaClassifyDetailUrl,
+  sinaConceptsIndexUrl
 } from './urls';
 import { codeToSymbol } from './util';
 
@@ -121,6 +122,45 @@ export function getSinaClassifyDetails(options, cb) {
             };
           });
         }
+        cb(null, ret);
+      } else {
+        cb(null, []);
+      }
+    });
+}
+
+export function getSinaConceptsClassified(cb) {
+  const url = sinaConceptsIndexUrl();
+
+  request
+    .get(url)
+    .charset('gbk')
+    .buffer()
+    .end(function(err, res) {
+      if(err || !res.ok) {
+        cb(err);
+      } else if(res.text) {
+        let ret = [];
+        const json = JSON.parse(res.text.split('=')[1].trim());
+        for(let tag in json) {
+          const conceptsArr = json[tag].split(',');
+          ret.push({
+            tag: conceptsArr[0],
+            name: conceptsArr[1],
+            num: conceptsArr[2],
+            price: conceptsArr[3],
+            changePrice: conceptsArr[4],
+            changePercent: conceptsArr[5],
+            volume: conceptsArr[6] / 100,
+            amount: conceptsArr[7] / 10000,
+            leadingSymbol: conceptsArr[8],
+            leadingChangePercent: conceptsArr[9],
+            leadingPrice: conceptsArr[10],
+            leadingChangePrice: conceptsArr[11],
+            leadingName: conceptsArr[12]
+          });
+        }
+
         cb(null, ret);
       } else {
         cb(null, []);
