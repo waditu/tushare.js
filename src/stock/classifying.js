@@ -1,7 +1,7 @@
 import request from 'superagent-charset';
 import {
   sinaIndustryIndexUrl,
-  classifyDetailUrl
+  sinaClassifyDetailUrl
 } from './urls';
 import { codeToSymbol } from './util';
 
@@ -93,7 +93,7 @@ export function getSinaClassifyDetails(options, cb) {
     options = {};
   }
   options = Object.assign(defaults, options);
-  const url = classifyDetailUrl(options.tag);
+  const url = sinaClassifyDetailUrl(options.tag);
 
   request
     .get(url)

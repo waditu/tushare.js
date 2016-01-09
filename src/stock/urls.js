@@ -41,7 +41,7 @@ export function sinaIndustryIndexUrl() {
   return url;
 }
 
-export function classifyDetailUrl(tag) {
+export function sinaClassifyDetailUrl(tag) {
   const url = `http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page=1&num=400&sort=symbol&asc=1&node=${tag}&symbol=&_s_r_a=page`;
   return url;
 }
