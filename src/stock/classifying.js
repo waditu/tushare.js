@@ -129,6 +129,26 @@ export function getSinaClassifyDetails(options, cb) {
     });
 }
 
+/**
+ * getSinaConceptsClassified - 获取新浪概念板块分类数据
+ * 返回数据格式 - 数组，包含：
+ * tag: 新浪概念分类标识
+ * name: 新浪概念分类名称
+ * num: 概念包含股票数量
+ * price: 平均价
+ * changePrice: 涨跌额
+ * changePercent: 涨跌幅
+ * volume: 总成交量（手）
+ * amount: 总成交额（万）
+ * leadingSymbol: 领涨股票代码
+ * leadingChangePercent: 领涨股涨跌幅
+ * leadingPrice: 领涨股价格
+ * leadingChangePrice: 领涨股涨跌额
+ * leadingName: 领涨股名称
+ *
+ * @param cb
+ * @returns {undefined}
+ */
 export function getSinaConceptsClassified(cb) {
   const url = sinaConceptsIndexUrl();
 
