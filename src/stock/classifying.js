@@ -2,9 +2,10 @@ import request from 'superagent-charset';
 import {
   sinaIndustryIndexUrl,
   sinaClassifyDetailUrl,
-  sinaConceptsIndexUrl
+  sinaConceptsIndexUrl,
+  allStockUrl
 } from './urls';
-import { codeToSymbol } from './util';
+import { codeToSymbol, csvToObject } from './util';
 
 /**
  * getSinaIndustryClassified: 获取新浪行业板块数据
@@ -182,6 +183,52 @@ export function getSinaConceptsClassified(cb) {
         }
 
         cb(null, ret);
+      } else {
+        cb(null, []);
+      }
+    });
+}
+
+/**
+ * getAllStocks - 返回沪深上市公司基本情况
+ * 返回数据格式:
+ * [
+ *  {
+ *    code,代码
+ *    name,名称
+ *    industry,所属行业
+ *    area,地区
+ *    pe,市盈率
+ *    outstanding,流通股本
+ *    totals,总股本(万)
+ *    totalAssets,总资产(万)
+ *    liquidAssets,流动资产
+ *    fixedAssets,固定资产
+ *    reserved,公积金
+ *    reservedPerShare,每股公积金
+ *    eps,每股收益
+ *    bvps,每股净资
+ *    pb,市净率
+ *    timeToMarket,上市日期
+ *  }
+ * ]
+ *
+ * @param cb
+ * @returns {undefined}
+ */
+export function getAllStocks(cb) {
+  const url = allStockUrl();
+
+  request
+    .get(url)
+    .charset('gbk')
+    .buffer()
+    .end(function(err, res) {
+      if(err || !res.ok) {
+        cb(err);
+      } else if(res.text) {
+        const stockList = csvToObject(res.text);
+        cb(null, stockList);
       } else {
         cb(null, []);
       }

@@ -50,3 +50,8 @@ export function sinaConceptsIndexUrl() {
   const url = `http://money.finance.sina.com.cn/q/view/newFLJK.php?param=class`;
   return url;
 }
+
+export function allStockUrl() {
+  const url = `http://218.244.146.57/static/all.csv`;
+  return url;
+}

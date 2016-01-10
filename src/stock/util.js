@@ -10,3 +10,19 @@ export function codeToSymbol(code) {
 
   return symbol;
 }
+
+export function csvToObject(csv) {
+  let csvArr = csv.trim().split('\r\n');
+  let headers = csvArr.splice(0, 1);
+
+  headers = headers[0].split(',');
+  csvArr = csvArr.map(function(ele) {
+    let obj = {};
+    ele.split(',').forEach(function(s, i) {
+      obj[headers[i]] = s;
+    });
+    return obj;
+  });
+
+  return csvArr;
+}
