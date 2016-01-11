@@ -277,20 +277,7 @@ export function getHS300(cb) {
         cb(err);
       } else if(res.text) {
         let json = JSON.parse(res.text)[0];
-        let items = json.items.map(function(ele) {
-          let obj = {};
-          ele.forEach((s, i) => {
-            let field = json.fields[i];
-            if(field === 'volume') {
-              obj[field] = s / 100;
-            } else if(field === 'amount') {
-              obj[field] = s / 10000;
-            } else {
-              obj[field] = s;
-            }
-          });
-          return obj;
-        });
+        let items = arrayObjectMapping(json.fields, json.items);
         cb(null, items);
       } else {
         cb(null, []);

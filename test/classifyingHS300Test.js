@@ -6,6 +6,6 @@ test('Get HS300 Stock Data', function(t) {
   tushare.stock.getHS300(function(err, data) {
     console.log(data);
     t.ok(Object.prototype.toString.apply(data) === '[object Array]', 'It should return an array of stocks');
-    t.ok(data.length > 0, 'It should return more than one stocks');
+    t.ok(data.length === 300, 'It should return 300 records');
   });
 });
