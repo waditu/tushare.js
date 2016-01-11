@@ -60,3 +60,8 @@ export function hs300Url(pageNo = 1, pageSize = 300) {
   const url = `http://money.finance.sina.com.cn/d/api/openapi_proxy.php/?__s=[["jjhq",${pageNo},${pageSize},"",0,"hs300"]]`;
   return url;
 }
+
+export function sz50Url(pageNo = 1, pageSize = 50) {
+  const url = `http://money.finance.sina.com.cn/d/api/openapi_proxy.php/?__s=[["jjhq",${pageNo},${pageSize},"",0,"zhishu_000016"]]`;
+  return url;
+}

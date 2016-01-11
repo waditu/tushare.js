@@ -31,7 +31,14 @@ export function arrayObjectMapping(fields, items) {
   items = items.map(function(ele) {
     let obj = {};
     ele.forEach(function(s, i) {
-      obj[fields[i]] = s;
+      let field = fields[i];
+      if(field === 'volume') {
+        obj[field] = s / 100;
+      } else if(field === 'amount') {
+        obj[field] = s / 10000;
+      } else {
+        obj[field] = s;
+      }
     });
     return obj;
   });
