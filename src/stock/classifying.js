@@ -3,7 +3,8 @@ import {
   sinaIndustryIndexUrl,
   sinaClassifyDetailUrl,
   sinaConceptsIndexUrl,
-  allStockUrl
+  allStockUrl,
+  hs300Url
 } from './urls';
 import { codeToSymbol, csvToObject } from './util';
 
@@ -229,6 +230,67 @@ export function getAllStocks(cb) {
       } else if(res.text) {
         const stockList = csvToObject(res.text);
         cb(null, stockList);
+      } else {
+        cb(null, []);
+      }
+    });
+}
+
+/**
+ * getHS300 - 获取沪深300股票信息
+ * 返回数据格式: 数组
+ * [
+ *   {
+ *     symbol: 股票代码, 如：sh600000
+ *     name: 股票名称
+ *     trade: 最新价
+ *     pricechange: 涨跌额
+ *     changepercent: 涨跌幅
+ *     buy: 买入价
+ *     sell: 卖出价
+ *     settlement: 昨收
+ *     open: 开盘价
+ *     high: 最高价
+ *     low: 最低价
+ *     volume: 成交量（手）
+ *     amount: 成交额（万）
+ *     code: 股票六位代码, 如: 600000
+ *     ticktime:
+ *     focus:
+ *     fund:
+ *   }
+ * ]
+ *
+ * @param cb
+ * @returns {undefined}
+ */
+export function getHS300(cb) {
+  const url = hs300Url();
+
+  request
+    .get(url)
+    .charset('gbk')
+    .buffer()
+    .end(function(err, res) {
+      if(err || !res.ok) {
+        cb(err);
+      } else if(res.text) {
+        let json = JSON.parse(res.text)[0];
+        let items = json.items.map(function(ele) {
+          let obj = {};
+          ele.forEach((s, i) => {
+            let field = json.fields[i];
+            if(field === 'volume') {
+              obj[field] = s / 100;
+            } else if(field === 'amount') {
+              obj[field] = s / 10000;
+            } else {
+              obj[field] = s;
+            }
+          });
+          return obj;
+        });
+        cb(null, items);
       } else {
         cb(null, []);
       }
