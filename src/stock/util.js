@@ -26,3 +26,15 @@ export function csvToObject(csv) {
 
   return csvArr;
 }
+
+export function arrayObjectMapping(fields, items) {
+  items = items.map(function(ele) {
+    let obj = {};
+    ele.forEach(function(s, i) {
+      obj[fields[i]] = s;
+    });
+    return obj;
+  });
+
+  return items;
+}
