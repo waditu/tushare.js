@@ -65,3 +65,8 @@ export function sz50Url(pageNo = 1, pageSize = 50) {
   const url = `http://money.finance.sina.com.cn/d/api/openapi_proxy.php/?__s=[["jjhq",${pageNo},${pageSize},"",0,"zhishu_000016"]]`;
   return url;
 }
+
+export function lhbUrl(start, end, pageNo = 1, pageSize = 150) {
+  const url = `http://quotes.money.163.com/hs/marketdata/service/lhb.php?page=${pageNo - 1}&query=start:${start};end:${end}&sort=TDATE&order=desc&count=${pageSize}`;
+  return url;
+}
