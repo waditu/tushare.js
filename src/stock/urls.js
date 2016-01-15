@@ -70,3 +70,8 @@ export function lhbUrl(start, end, pageNo = 1, pageSize = 150) {
   const url = `http://quotes.money.163.com/hs/marketdata/service/lhb.php?page=${pageNo - 1}&query=start:${start};end:${end}&sort=TDATE&order=desc&count=${pageSize}`;
   return url;
 }
+
+export function blockTradeUrl(start, end, pageNo = 1, pageSize = 150) {
+  const url = `http://quotes.money.163.com/hs/marketdata/service/dzjy.php?page=${pageNo - 1}&query=start:${start};end:${end};&order=desc&count=${pageSize}&sort=PUBLISHDATE`;
+  return url;
+}
