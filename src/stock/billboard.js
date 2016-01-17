@@ -6,17 +6,38 @@ import {
 } from './urls';
 import { codeToSymbol } from './util';
 
+/**
+ * lhb - 获取龙虎榜数据
+ * [
+ *  {
+ *    symbol: 股票代码
+ *    name: 股票名称
+ *    price: 收盘价格
+ *    date: 日期哦
+ *    changePercent: 涨跌幅
+ *    type: 上榜理由
+ *    volume: 成交量（手）
+ *    amount: 成交额（万）
+ *  }
+ * ]
+ *
+ * @param options
+ * @param cb
+ * @returns {undefined}
+ */
 export function lhb(options, cb) {
   const defaults = {
     start: moment().format('YYYY-MM-DD'),
-    end: moment().format('YYYY-MM-DD')
+    end: moment().format('YYYY-MM-DD'),
+    pageNo: 1,
+    pageSize: 150
   };
   if(Object.prototype.toString.apply(options) === '[object Function]') {
     cb = options;
     options = {};
   }
   options = Object.assign(defaults, options);
-  const url = lhbUrl(options.start, options.end);
+  const url = lhbUrl(options.start, options.end, options.pageNo, options.pageSize);
 
   request
     .get(url)
