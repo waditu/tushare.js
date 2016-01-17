@@ -173,3 +173,80 @@ tushare.stock.getSinaClassifyDetails(options, function(err, data) {
   tag: 新浪行业代码
 }
 ```
+
+## 3. 获取新浪概念分类信息
+返回数据中的tag可用于上面（#2）的接口，用于获取某个概念分类的具体信息
+```
+tushare.stock.getSinaConceptsClassified(function(err, data) {
+  console.log(data);
+});
+```
+
+## 4. 获取所有上市公司股票基本信息
+```
+tushare.stock.getAllStocks(function(err, data) {
+  console.log(data);
+});
+```
+
+## 5. 获取沪深300股票信息
+```
+tushare.stock.getHS300(function(err, data) {
+  console.log(data);
+});
+```
+
+## 6. 获取上证50股票信息
+```
+tushare.stock.getSZ50(function(err, data) {
+  console.log(data);
+});
+```
+
+## 龙虎榜
+
+## 1. 龙虎榜单（来自网易财经）
+```
+  var options = {
+    start: '2016-01-15',
+    end: '2016-01-15',
+    pageNo: 1,
+    pageSize: 150
+  };
+  tushare.stock.lhb(options, function(err, data) {
+    console.log(data);
+  });
+```
+
+`options` 参数说明：
+```
+{
+start: 开始日期
+end: 结束日期
+pageNo: （optional, default: 1）
+pageSize: optional, default: 150）
+}
+```
+
+## 2. 大宗交易（来自网易财经）
+```
+  var options = {
+    start: '2016-01-15',
+    end: '2016-01-15',
+    pageNo: 1,
+    pageSize: 150
+  };
+  tushare.stock.blockTeade(options, function(err, data) {
+    console.log(data);
+  });
+```
+
+`options` 参数说明：
+```
+{
+start: 开始日期
+end: 结束日期
+pageNo: （optional, default: 1）
+pageSize: optional, default: 150）
+}
+```
