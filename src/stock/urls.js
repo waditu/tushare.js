@@ -75,3 +75,21 @@ export function blockTradeUrl(start, end, pageNo = 1, pageSize = 150) {
   const url = `http://quotes.money.163.com/hs/marketdata/service/dzjy.php?page=${pageNo - 1}&query=start:${start};end:${end};&order=desc&count=${pageSize}&sort=PUBLISHDATE`;
   return url;
 }
+
+export function longPeriodRankUrl(period = 'month', pageNo = 1, pageSize = 100) {
+  let rankBy = '';
+  switch(period) {
+    case 'week':
+      rankBy = 'WEEK_PERCENT';
+    case 'month':
+      rankBy = 'MONTH_PERCENT';
+    case 'quarter':
+      rankBy = 'QUARTER_PERCENT';
+    case 'year':
+      rankBy = 'YEAR_PERCENT';
+    default:
+      rankBy = 'PERCENT';
+  }
+  const url = `http://quotes.money.163.com/hs/realtimedata/service/rank.php?page=${pageNo - 1}&query=LONG_PERIOD_RANK:_exists_&fields=RN,CODE,SYMBOL,NAME,PRICE,LONG_PERIOD_RANK,PERCENT&sort=LONG_PERIOD_RANK.${rankBy}&order=desc&count=${pageSize}`;
+  return url;
+}

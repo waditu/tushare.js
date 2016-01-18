@@ -2,7 +2,8 @@ import request from 'superagent-charset';
 import moment from 'moment';
 import {
   lhbUrl,
-  blockTradeUrl
+  blockTradeUrl,
+  longPeriodRankUrl
 } from './urls';
 import { codeToSymbol } from './util';
 
@@ -133,6 +134,76 @@ export function blockTrade(options, cb) {
             buyer: item.DZJY9,
             seller: item.DZJY11,
             dopRate: item.DZJY55
+          };
+        });
+
+        cb(null, result);
+      } else {
+        cb(null, {});
+      }
+    });
+}
+
+/**
+ * longPeriodRank - 长期阶段涨跌幅
+ * 返回数据格式:
+ * [
+ *  {
+ *    symbol: 股票代码
+ *    name: 股票名称
+ *    price: 股票价格
+ *    date: 时间
+ *    dayPercent: 单日涨跌幅
+ *    weekPercent: 周涨跌幅
+ *    monthPercent: 月涨跌幅
+ *    quarterPercent: 季度涨跌幅
+ *    halfYearPercent: 半年涨跌幅
+ *    yearPercent: 年度涨跌幅
+ *  }
+ * ]
+ *
+ * @param options
+ * @param cb
+ * @returns {undefined}
+ */
+export function longPeriodRank(options, cb) {
+  const defaults = {
+    period: 'month',
+    pageNo: 1,
+    pageSize: 100
+  };
+  if(Object.prototype.toString.apply(options) === '[object Function]') {
+    cb = options;
+    options = {};
+  }
+  options = Object.assign(defaults, options);
+  const url = longPeriodRankUrl(options.period, options.pageNo, options.pageSize);
+
+  request
+    .get(url)
+    .charset('gbk')
+    .buffer()
+    .end(function(err, res) {
+      if(err || !res.ok) {
+        cb(err);
+      } else if(res.text) {
+        let result = {};
+        let data = JSON.parse(res.text);
+        result.page = data.page + 1;
+        result.total = data.total;
+        result.pageCount = data.pagecount;
+        result.items = data.list.map((item) => {
+          return {
+            symbol: codeToSymbol(item.CODE),
+            name: item.NAME,
+            price: item.PRICE,
+            date: item.LONG_PERIOD_RANK.TIME,
+            dayPercent: item['PERCENT'],
+            weekPercent: item['LONG_PERIOD_RANK']['WEEK_PERCENT'],
+            monthPercent: item['LONG_PERIOD_RANK']['MONTH_PERCENT'],
+            quarterPercent: item['LONG_PERIOD_RANK']['QUARTER_PERCENT'],
+            halfYearPercent: item['LONG_PERIOD_RANK']['HALF_YEAR_PERCENT'],
+            yearPercent: item['LONG_PERIOD_RANK']['YEAR_PERCENT']
           };
         });
 
