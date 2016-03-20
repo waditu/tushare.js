@@ -6,6 +6,8 @@ export function codeToSymbol(code) {
     symbol = INDEX_LIST[code];
   } else if(code.length === 6) {
     symbol = ['5', '6', '9'].indexOf(code.charAt(0)) >= 0 ? 'sh' + code : 'sz' + code;
+  } else {
+    symbol = code;
   }
 
   return symbol;
