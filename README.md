@@ -25,7 +25,7 @@ tushare.stock.getTodayAll(function(err, data) {
 
 ## 1. 获取个股历史数据
 ```
-const option = {
+const options = {
   code: '600848',
   ktype: 'week'
 };
