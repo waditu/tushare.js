@@ -1,10 +1,12 @@
-var tushare = require('../lib/index');
-var test = require('tape');
+import test from 'ava';
+import { stock } from '../lib';
 
-test('Get Day Price', function(t) {
+test('Get Day Price', t => {
   t.plan(2);
-  tushare.stock.getSinaIndustryClassified(function(err, data) {
-    t.ok(Object.prototype.toString.apply(data) === '[object Array]', 'It should return an array industry data');
-    t.ok(data.length > 0, 'It should return more than one industry data');
+  return stock.getSinaIndustryClassified().then(({ data }) => {
+    console.log(data);
+    t.truthy(Object.prototype.toString.apply(data) === '[object Array]',
+      'It should return an array industry data');
+    t.truthy(data.length > 0, 'It should return more than one industry data');
   });
 });

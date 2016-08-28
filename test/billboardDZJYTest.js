@@ -8,6 +8,6 @@ test('Get All Stock Data', t => {
   };
   return stock.blockTrade(options).then(({ data }) => {
     console.log(data);
-    t.ok(data.items.length > 0, 'It should return more than one stocks');
+    t.truthy(data.items.length > 0, 'It should return more than one stocks');
   });
 });

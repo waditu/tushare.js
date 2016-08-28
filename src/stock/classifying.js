@@ -5,9 +5,11 @@ import {
   sinaConceptsIndexUrl,
   allStockUrl,
   hs300Url,
-  sz50Url
+  sz50Url,
 } from './urls';
-import { codeToSymbol, csvToObject, arrayObjectMapping } from './util';
+import { csvToObject, arrayObjectMapping, checkStatus } from './util';
+import { charset } from '../utils/charset';
+import '../utils/fetch';
 
 /**
  * getSinaIndustryClassified: 获取新浪行业板块数据
@@ -26,43 +28,38 @@ import { codeToSymbol, csvToObject, arrayObjectMapping } from './util';
  * leadingChangePrice: 领涨股涨跌额
  * leadingName: 领涨股名称
  */
-export function getSinaIndustryClassified(cb) {
+export const getSinaIndustryClassified = () => {
   const url = sinaIndustryIndexUrl();
-
-  request
-    .get(url)
-    .charset('gbk')
-    .end(function(err, res) {
-      if(err || !res.ok) {
-        cb(err);
-      } else if(res.text) {
-        let ret = [];
-        const json = JSON.parse(res.text.split('=')[1].trim());
-        for(let tag in json) {
-          const industryArr = json[tag].split(',');
-          ret.push({
-            tag: industryArr[0],
-            name: industryArr[1],
-            num: industryArr[2],
-            price: industryArr[3],
-            changePrice: industryArr[4],
-            changePercent: industryArr[5],
-            volume: industryArr[6] / 100,
-            amount: industryArr[7] / 10000,
-            leadingSymbol: industryArr[8],
-            leadingChangePercent: industryArr[9],
-            leadingPrice: industryArr[10],
-            leadingChangePrice: industryArr[11],
-            leadingName: industryArr[12]
-          });
-        }
-
-        cb(null, ret);
-      } else {
-        cb(null, []);
-      }
+  const mapData = data => {
+    const result = [];
+    const json = JSON.parse(data.split('=')[1].trim());
+    Object.keys(json).forEach(tag => {
+      const industryArr = json[tag].split(',');
+      result.push({
+        tag: industryArr[0],
+        name: industryArr[1],
+        num: industryArr[2],
+        price: industryArr[3],
+        changePrice: industryArr[4],
+        changePercent: industryArr[5],
+        volume: industryArr[6] / 100,
+        amount: industryArr[7] / 10000,
+        leadingSymbol: industryArr[8],
+        leadingChangePercent: industryArr[9],
+        leadingPrice: industryArr[10],
+        leadingChangePrice: industryArr[11],
+        leadingName: industryArr[12],
+      });
     });
-}
+    return { data: result };
+  };
+
+  return fetch(url, { disableDecoding: true })
+  .then(checkStatus)
+  .then(charset('GBK'))
+  .then(mapData)
+  .catch(error => ({ error }));
+};
 
 /**
  * getClassifyDetails - 获取新浪某个行业分类下的股票数据
@@ -88,49 +85,40 @@ export function getSinaIndustryClassified(cb) {
  * @param cb
  * @return {undefined}
  */
-export function getSinaClassifyDetails(options, cb) {
+/* eslint-disable no-eval */
+export const getSinaClassifyDetails = query => {
   const defaults = {
-    tag: 'new_jrhy' // 默认金融行业
+    tag: 'new_jrhy', // 默认金融行业
   };
-  if(Object.prototype.toString.apply(options) === '[object Function]') {
-    cb = options;
-    options = {};
-  }
-  options = Object.assign(defaults, options);
+  const options = Object.assign({}, defaults, query);
   const url = sinaClassifyDetailUrl(options.tag);
+  const mapData = data => {
+    let result = [];
+    result = eval(data);
+    if (result) {
+      result = result.map(ele => ({
+        symbol: ele.symbol,
+        name: ele.name,
+        price: ele.trade,
+        changePrice: ele.pricechange,
+        changePercent: ele.changepercent,
+        open: ele.open,
+        high: ele.high,
+        low: ele.low,
+        volume: ele.volume / 100,
+        amount: ele.amount / 10000,
+        tickTime: ele.ticktime,
+      }));
+    }
+    return { data: result };
+  };
 
-  request
-    .get(url)
-    .charset('gbk')
-    .buffer()
-    .end(function(err, res) {
-      if(err || !res.ok) {
-        cb(err);
-      } else if(res.text) {
-        let ret = eval(res.text);
-        if(ret) {
-          ret = ret.map(function(ele) {
-            return {
-              symbol: ele.symbol,
-              name: ele.name,
-              price: ele.trade,
-              changePrice: ele.pricechange,
-              changePercent: ele.changepercent,
-              open: ele.open,
-              high: ele.high,
-              low: ele.low,
-              volume: ele.volume / 100,
-              amount: ele.amount / 10000,
-              tickTime: ele.ticktime
-            };
-          });
-        }
-        cb(null, ret);
-      } else {
-        cb(null, []);
-      }
-    });
-}
+  return fetch(url, { disableDecoding: true })
+  .then(checkStatus)
+  .then(charset('GBK'))
+  .then(mapData)
+  .catch(error => ({ error }));
+};
 
 /**
  * getSinaConceptsClassified - 获取新浪概念板块分类数据
