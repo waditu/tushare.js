@@ -3,7 +3,8 @@ import { K_TYPE } from './cons';
 export const priceUrl = (ktype, symbol) => {
   const _ktype = K_TYPE[ktype] ? K_TYPE[ktype] : K_TYPE.minute;
   const type = _ktype === K_TYPE.minute ? ktype : 'last';
-  return `http://api.finance.ifeng.com/${_ktype}/?code=${symbol}&type=${type}`;
+  const codeStr = _ktype === K_TYPE.minute ? 'scode' : 'code';
+  return `http://api.finance.ifeng.com/${_ktype}/?${codeStr}=${symbol}&type=${type}`;
 };
 
 export const tickUrl = (date, symbol) => `http://market.finance.sina.com.cn/downxls.php?date=${date}&symbol=${symbol}`;

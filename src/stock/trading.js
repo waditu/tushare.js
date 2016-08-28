@@ -7,9 +7,12 @@ import {
   liveDataUrl,
   todayTickUrl,
   indexUrl,
-  sinaDDUrl
+  sinaDDUrl,
 } from './urls';
-import { codeToSymbol } from './util';
+import { codeToSymbol, checkStatus } from './util';
+import { charset } from '../utils/charset';
+import { DATE_NOW } from './util';
+import '../utils/fetch';
 
 /**
  * getHistory: 获取个股历史数据
@@ -23,34 +26,24 @@ import { codeToSymbol } from './util';
  * @param cb
  * @return {undefined}
  */
-export function getHistory(options = {}, cb) {
+export const getHistory = (query = {}) => {
   const defaults = {
     code: null,
     start: null,
     end: null,
-    ktype: 'day'
+    ktype: 'day',
   };
-  if(Object.prototype.toString.apply(options) === '[object Function]') {
-    cb = options;
-    options = {};
-  }
-  options = Object.assign(defaults, options);
+  const options = Object.assign({}, defaults, query);
 
   const symbol = codeToSymbol(options.code);
   const url = priceUrl(options.ktype, symbol);
 
-  request
-    .get(url)
-    .end(function(err, res) {
-      if(err || !res.ok) {
-        cb(err);
-      } else if(res.text) {
-        cb(null, JSON.parse(res.text));
-      } else {
-        cb(null, {});
-      }
-    });
-}
+  return fetch(url)
+  .then(checkStatus)
+  .then(res => res.json())
+  .then(json => ({ data: json }))
+  .catch(error => ({ error }));
+};
 
 /**
  * getTick - 获取历史分笔数据
@@ -62,40 +55,31 @@ export function getHistory(options = {}, cb) {
  * @param cb
  * @return {undefined}
  */
-export function getTick(options, cb) {
+export const getTick = (query = {}) => {
   const defaults = {
     code: null,
-    date: null
+    date: null,
   };
-  if(Object.prototype.toString.apply(options) === '[object Function]') {
-    cb = options;
-    options = {};
-  }
-  options = Object.assign(defaults, options);
+  const options = Object.assign({}, defaults, query);
 
   const symbol = codeToSymbol(options.code);
   const url = tickUrl(options.date, symbol);
-
-  request
-    .get(url)
-    .charset('gbk')
-    .buffer()
-    .end(function(err, res) {
-      if(err || !res.ok) {
-        cb(err);
-      } else if(res.text) {
-        let ret = [];
-        res.text.split('\n').forEach(function(line, i) {
-          if(i !== 0 && line !== '') {
-            ret.push(line.split('\t'));
-          }
-        });
-        cb(null, ret);
-      } else {
-        cb(null, []);
+  const mapData = data => {
+    const result = [];
+    data.split('\n').forEach((line, i) => {
+      if (i !== 0 && line !== '') {
+        result.push(line.split('\t'));
       }
     });
-}
+    return { data: result };
+  };
+
+  return fetch(url)
+  .then(checkStatus)
+  .then(charset('GBK'))
+  .then(mapData)
+  .catch(error => ({ error }));
+};
 
 /**
  * getTodayAll - 一次性获取最近一个日交易日所有股票的交易数据
@@ -107,34 +91,21 @@ export function getTick(options, cb) {
  * @param cb
  * @return {undefined}
  */
-export function getTodayAll(options, cb) {
+/* eslint-disable no-eval */
+export const getTodayAll = (query = {}) => {
   const defaults = {
     pageSize: 10000,
-    pageNo: 1
+    pageNo: 1,
   };
-  if(Object.prototype.toString.apply(options) === '[object Function]') {
-    cb = options;
-    options = {};
-  }
-  options = Object.assign(defaults, options);
-
+  const options = Object.assign({}, defaults, query);
   const url = todayAllUrl(options.pageSize, options.pageNo);
 
-  request
-    .get(url)
-    .charset('gbk')
-    .buffer()
-    .end(function(err, res) {
-      if(err || !res.ok) {
-        cb(err);
-      } else if(res.text) {
-        let ret = eval(res.text);
-        cb(null, ret);
-      } else {
-        cb(null, []);
-      }
-    });
-}
+  return fetch(url)
+  .then(checkStatus)
+  .then(res => res.text())
+  .then(data => ({ data: eval(data) }))
+  .catch(error => ({ error }));
+};
 
 /**
  * getLiveData - 获取实时交易数据
@@ -171,45 +142,30 @@ export function getTodayAll(options, cb) {
  * @param cb
  * @return {undefined}
  */
-export function getLiveData(options, cb) {
-  const defaults = {
-    codes: ['600000']
-  };
-  if(Object.prototype.toString.apply(options) === '[object Function]') {
-    cb = options;
-    options = {};
-  }
-  options = Object.assign(defaults, options);
-
-  const codes = options.codes.map(function(code) {
-    return codeToSymbol(code);
-  });
-
+export const getLiveData = (query = {}) => {
+  const defaults = { codes: ['600000'] };
+  const options = Object.assign({}, defaults, query);
+  const codes = options.codes.map(code => codeToSymbol(code));
   const url = liveDataUrl(codes);
-
-  request
-    .get(url)
-    .charset('gbk')
-    .buffer()
-    .end(function(err, res) {
-      if(err || !res.ok) {
-        cb(err);
-      } else if(res.text) {
-        const ret = res.text.split('\n').filter(function(tmpStr) {
-          return tmpStr !== '';
-        }).map(function(codeStr) {
-          const matches = codeStr.match(/(sz|sh)(\d{6}).*\"(.*)\"/i);
-          const symbol = matches[1] + matches[2];
-          let data = matches[3].split(',');
-          data.unshift(symbol);
-          return data;
-        });
-        cb(null, ret);
-      } else {
-        cb(null, []);
-      }
+  const mapData = data => {
+    const result = data.split('\n')
+    .filter(item => item !== '')
+    .map(item => {
+      const matches = item.match(/(sz|sh)(\d{6}).*"(.*)"/i);
+      const symbol = matches[1] + matches[2];
+      const records = matches[3].split(',');
+      return [symbol, ...records];
     });
-}
+
+    return { data: result };
+  };
+
+  return fetch(url)
+  .then(checkStatus)
+  .then(charset('GBK'))
+  .then(mapData)
+  .catch(error => ({ error }));
+};
 
 /**
  * getTodayTick - 获取当日分笔明细数据，用于在交易进行的时候获取
@@ -236,68 +192,51 @@ export function getLiveData(options, cb) {
  * @param cb
  * @return {undefined}
  */
-export function getTodayTick(options, cb) {
+export const getTodayTick = (query = {}) => {
   const defaults = {
     code: '600000',
-    end: '15:00:00'
+    end: '15:00:00',
   };
-  if(Object.prototype.toString.apply(options) === '[object Function]') {
-    cb = options;
-    options = {};
-  }
-  options = Object.assign(defaults, options);
-
+  const options = Object.assign({}, defaults, query);
   const url = todayTickUrl(options.code, options.end);
 
-  request
-    .get(url)
-    .charset('gbk')
-    .end(function(err, res) {
-      if(err || !res.ok) {
-        cb(err);
-      } else if(res.text) {
-        cb(null, JSON.parse(res.text));
-      } else {
-        cb(null, []);
-      }
-    });
-}
+  return fetch(url)
+  .then(checkStatus)
+  .then(res => res.json())
+  .then(json => ({ data: json }))
+  .catch(error => ({ error }));
+};
 
-export function getIndex(cb) {
+export const getIndex = () => {
   const url = indexUrl();
+  const mapData = data => {
+    const result = data.split('\n')
+      .filter(item => item !== '')
+      .map(item => {
+        const matches = item.match(/(sz|sh)(\d{6}).*"(.*)"/i);
+        const symbol = matches[1] + matches[2];
+        const records = matches[3].split(',');
+        return {
+          code: symbol,
+          name: records[0],
+          open: records[1],
+          preclose: records[2],
+          close: records[3],
+          high: records[4],
+          low: records[5],
+          volume: records[8],
+          amount: records[9],
+        };
+      });
+    return { data: result };
+  };
 
-  request
-    .get(url)
-    .charset('gbk')
-    .buffer()
-    .end(function(err, res) {
-      if(err || !res.ok) {
-        cb(err);
-      } else if(res.text) {
-        const ret = res.text.split('\n').filter(function(tmpStr) {
-          return tmpStr !== '';
-        }).map(function(codeStr) {
-          const matches = codeStr.match(/(sz|sh)(\d{6}).*\"(.*)\"/i);
-          const symbol = matches[1] + matches[2];
-          let data = matches[3].split(',');
-          return {
-            code: symbol,
-            name: data[0],
-            open: data[1],
-            preclose: data[2],
-            close: data[3],
-            high: data[4],
-            low: data[5],
-            volume: data[8],
-            amount: data[9]
-          };
-        });
-        cb(null, ret);
-      } else {
-        cb(null, []);
-      }
-    });
-}
+  return fetch(url)
+  .then(checkStatus)
+  .then(charset('GBK'))
+  .then(mapData)
+  .catch(error => ({ error }));
+};
 
 /**
  * getSinaDD - 获取新浪大单数据
@@ -321,44 +260,35 @@ export function getIndex(cb) {
  * @param cb
  * @return {undefined}
  */
-export function getSinaDD(options, cb) {
+export const getSinaDD = (query = {}) => {
   const defaults = {
     code: '600000',
     volume: 400,
-    date: moment().format('YYYY-MM-DD')
+    date: DATE_NOW,
   };
-  if(Object.prototype.toString.apply(options) === '[object Function]') {
-    cb = options;
-    options = {};
-  }
-  options = Object.assign(defaults, options);
+  const options = Object.assign({}, defaults, query);
   const url = sinaDDUrl(codeToSymbol(options.code), options.volume * 100, options.date);
+  const mapData = data => {
+    const result = data.split('\n')
+      .filter((item, idx) => item !== '' && idx !== 0)
+      .map(item => {
+        const ddArr = item.split(',');
+        return {
+          symbol: ddArr[0],
+          name: ddArr[1],
+          time: ddArr[2],
+          price: ddArr[3],
+          volume: ddArr[4] / 100,
+          preprice: ddArr[5],
+          type: ddArr[6],
+        };
+      });
+    return { data: result };
+  };
 
-  request
-    .get(url)
-    .charset('gbk')
-    .buffer()
-    .end(function(err, res) {
-      if(err || !res.ok) {
-        cb(err);
-      } else if(res.text) {
-        const ret = res.text.split('\n').filter(function(tmpStr, idx) {
-          return tmpStr !== '' && idx !== 0;
-        }).map(function(ddStr) {
-          const ddArr = ddStr.split(',');
-          return {
-            symbol: ddArr[0],
-            name: ddArr[1],
-            time: ddArr[2],
-            price: ddArr[3],
-            volume: ddArr[4] / 100,
-            preprice: ddArr[5],
-            type: ddArr[6]
-          };
-        });
-        cb(null, ret);
-      } else {
-        cb(null, []);
-      }
-    });
-}
+  return fetch(url)
+  .then(checkStatus)
+  .then(charset('GBK'))
+  .then(mapData)
+  .catch(error => ({ error }));
+};

@@ -1,13 +1,15 @@
-var tushare = require('../lib/index');
-var test = require('tape');
+import test from 'ava';
+import { stock } from '../lib';
 
-test('Get Tick Data', function(t) {
+test('Get Tick Data', t => {
   t.plan(1);
-  var stock = {
+  const query = {
     code: '600848',
-    date: '2015-12-31'
+    date: '2015-12-31',
   };
-  tushare.stock.getTick(stock, function(err, data) {
-    t.ok(Object.prototype.toString.apply(data) === '[object Array]', 'It should return the object of day price');
+  return stock.getTick(query).then(({ data }) => {
+    console.log(data);
+    t.truthy(Object.prototype.toString.apply(data) === '[object Array]',
+      'It should return the object of day price');
   });
 });

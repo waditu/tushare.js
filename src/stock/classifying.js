@@ -86,7 +86,7 @@ export const getSinaIndustryClassified = () => {
  * @return {undefined}
  */
 /* eslint-disable no-eval */
-export const getSinaClassifyDetails = query => {
+export const getSinaClassifyDetails = (query = {}) => {
   const defaults = {
     tag: 'new_jrhy', // 默认金融行业
   };
@@ -140,44 +140,36 @@ export const getSinaClassifyDetails = query => {
  * @param cb
  * @returns {undefined}
  */
-export function getSinaConceptsClassified(cb) {
+export const getSinaConceptsClassified = () => {
   const url = sinaConceptsIndexUrl();
-
-  request
-    .get(url)
-    .charset('gbk')
-    .buffer()
-    .end(function(err, res) {
-      if(err || !res.ok) {
-        cb(err);
-      } else if(res.text) {
-        let ret = [];
-        const json = JSON.parse(res.text.split('=')[1].trim());
-        for(let tag in json) {
-          const conceptsArr = json[tag].split(',');
-          ret.push({
-            tag: conceptsArr[0],
-            name: conceptsArr[1],
-            num: conceptsArr[2],
-            price: conceptsArr[3],
-            changePrice: conceptsArr[4],
-            changePercent: conceptsArr[5],
-            volume: conceptsArr[6] / 100,
-            amount: conceptsArr[7] / 10000,
-            leadingSymbol: conceptsArr[8],
-            leadingChangePercent: conceptsArr[9],
-            leadingPrice: conceptsArr[10],
-            leadingChangePrice: conceptsArr[11],
-            leadingName: conceptsArr[12]
-          });
-        }
-
-        cb(null, ret);
-      } else {
-        cb(null, []);
-      }
+  const mapData = data => {
+    const json = JSON.parse(data.split('=')[1].trim());
+    const result = Object.keys(json).map(tag => {
+      const conceptsArr = json[tag].split(',');
+      return {
+        name: conceptsArr[1],
+        num: conceptsArr[2],
+        price: conceptsArr[3],
+        changePrice: conceptsArr[4],
+        changePercent: conceptsArr[5],
+        volume: conceptsArr[6] / 100,
+        amount: conceptsArr[7] / 10000,
+        leadingSymbol: conceptsArr[8],
+        leadingChangePercent: conceptsArr[9],
+        leadingPrice: conceptsArr[10],
+        leadingChangePrice: conceptsArr[11],
+        leadingName: conceptsArr[12],
+      };
     });
-}
+    return { data: result };
+  };
+
+  return fetch(url)
+  .then(checkStatus)
+  .then(charset('GBK'))
+  .then(mapData)
+  .catch(error => ({ error }));
+};
 
 /**
  * getAllStocks - 返回沪深上市公司基本情况
@@ -206,24 +198,15 @@ export function getSinaConceptsClassified(cb) {
  * @param cb
  * @returns {undefined}
  */
-export function getAllStocks(cb) {
+export const getAllStocks = () => {
   const url = allStockUrl();
 
-  request
-    .get(url)
-    .charset('gbk')
-    .buffer()
-    .end(function(err, res) {
-      if(err || !res.ok) {
-        cb(err);
-      } else if(res.text) {
-        const stockList = csvToObject(res.text);
-        cb(null, stockList);
-      } else {
-        cb(null, []);
-      }
-    });
-}
+  return fetch(url)
+  .then(checkStatus)
+  .then(charset('GBK'))
+  .then(data => ({ data: csvToObject(data) }))
+  .catch(error => ({ error }));
+};
 
 /**
  * getHS300 - 获取沪深300股票信息
@@ -253,25 +236,15 @@ export function getAllStocks(cb) {
  * @param cb
  * @returns {undefined}
  */
-export function getHS300(cb) {
+export const getHS300 = () => {
   const url = hs300Url();
 
-  request
-    .get(url)
-    .charset('gbk')
-    .buffer()
-    .end(function(err, res) {
-      if(err || !res.ok) {
-        cb(err);
-      } else if(res.text) {
-        let json = JSON.parse(res.text)[0];
-        let items = arrayObjectMapping(json.fields, json.items);
-        cb(null, items);
-      } else {
-        cb(null, []);
-      }
-    });
-}
+  return fetch(url)
+  .then(checkStatus)
+  .then(res => res.json())
+  .then(json => ({ data: arrayObjectMapping(json[0].fields, json[0].items) }))
+  .catch(error => ({ error }));
+};
 
 /**
  * getSZ50 - 获取上证50股票信息
@@ -301,22 +274,12 @@ export function getHS300(cb) {
  * @param cb
  * @returns {undefined}
  */
-export function getSZ50(cb) {
+export const getSZ50 = () => {
   const url = sz50Url();
 
-  request
-    .get(url)
-    .charset('gbk')
-    .buffer()
-    .end(function(err, res) {
-      if(err || !res.ok) {
-        cb(err);
-      } else if(res.text) {
-        let json = JSON.parse(res.text)[0];
-        let items = arrayObjectMapping(json.fields, json.items);
-        cb(null, items);
-      } else {
-        cb(null, []);
-      }
-    });
-}
+  return fetch(url)
+  .then(checkStatus)
+  .then(res => res.json())
+  .then(json => ({ data: arrayObjectMapping(json[0].fields, json[0].items) }))
+  .catch(error => ({ error }));
+};

@@ -1,10 +1,10 @@
-var tushare = require('../lib/index');
-var test = require('tape');
+import test from 'ava';
+import { stock } from '../lib';
 
-test('Get Tick Data', function(t) {
+test('Get Index Data', t => {
   t.plan(1);
-  tushare.stock.getIndex(function(err, data) {
-    t.ok(data.length > 0, 'It should return an array of index data');
+  return stock.getIndex().then(({ data }) => {
+    console.log(data);
+    t.truthy(data.length > 0, 'It should return an array of index data');
   });
-
 });

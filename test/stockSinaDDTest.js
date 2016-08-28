@@ -1,17 +1,15 @@
-var tushare = require('../lib/index');
-var test = require('tape');
+import test from 'ava';
+import { stock } from '../lib';
 
-test('Get Tick Data', function(t) {
-  t.plan(2);
-  tushare.stock.getSinaDD(function(err, data) {
-    t.ok(Object.prototype.toString.apply(data) === '[object Array]', 'It should return an array of da dan data');
-  });
-
-  var options = {
+test('Get Sina Highballing Data', t => {
+  const query = {
     code: '600848',
-    volume: 700
+    volume: 70,
+    date: '2016-08-26',
   };
-  tushare.stock.getSinaDD(options, function(err, data) {
-    t.ok(Object.prototype.toString.apply(data) === '[object Array]', 'It should return an array of da dan data');
+  return stock.getSinaDD(query).then(({ data }) => {
+    console.log(data);
+    t.truthy(Object.prototype.toString.apply(data) === '[object Array]',
+      'It should return an array of da dan data');
   });
 });
