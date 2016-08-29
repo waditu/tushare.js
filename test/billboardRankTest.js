@@ -1,23 +1,24 @@
-var tushare = require('../lib/index');
-var test = require('tape');
+import test from 'ava';
+import { stock } from '../lib';
 
-test('Get Long Period Rank Data', function(t) {
-  t.plan(2);
-  var options1 = {
+test('Get Long Period Rank Data by month', t => {
+  const options = {
     period: 'month',
     pageNo: 1,
-    pageSize: 100
+    pageSize: 100,
   };
-  tushare.stock.longPeriodRank(options1, function(err, data) {
-    t.ok(data.items.length === 100, 'It should return 100 records');
+  return stock.longPeriodRank(options).then(({ data }) => {
+    t.truthy(data.items.length === 100, 'It should return 100 records');
   });
+});
 
-  var options2 = {
+test('Get Long Period Rank Data by month', t => {
+  const options = {
     period: 'quarter',
     pageNo: 1,
-    pageSize: 100
+    pageSize: 100,
   };
-  tushare.stock.longPeriodRank(options2, function(err, data) {
-    t.ok(data.items.length === 100, 'It should return 100 records');
+  return stock.longPeriodRank(options).then(({ data }) => {
+    t.truthy(data.items.length === 100, 'It should return 100 records');
   });
 });

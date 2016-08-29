@@ -14,8 +14,9 @@ npm run test
 
 然后:
 ```
-var tushare = require('tushare');
-tushare.stock.getTodayAll(function(err, data) {
+import { stock } from 'tushare';
+
+stock.getTodayAll().then(({ data }) => {
   console.log(data);
 });
 
@@ -29,7 +30,7 @@ const options = {
   code: '600848',
   ktype: 'week'
 };
-tushare.stock.getHistory(options, function(err, data) {
+stock.getHistory(options).then(({ data }) => {
   console.log(data);
 });
 
@@ -51,7 +52,7 @@ const options = {
   code: '600848',
   date: '2015-12-31'
 };
-tushare.stock.getTick(options, function(err, data) {
+stock.getTick(options).then(({ data }) => {
   console.log(data);
 });
 ```
@@ -66,7 +67,7 @@ tushare.stock.getTick(options, function(err, data) {
 
 ## 3. 实时行情
 ```
-tushare.stock.getTodayAll(function(err, data) {
+stock.getTodayAll().then(({ data }) => {
   console.log(data);
 });
 ```
@@ -87,7 +88,7 @@ var options = {
     '600000'
   ]
 };
-tushare.stock.getLiveData(options, function(err, data) {
+stock.getLiveData(options).then(({ data }) => {
   console.log(data);
 });
 ```
@@ -107,7 +108,7 @@ var options = {
   code: '600848',
   end: '15:00:00'
 };
-tushare.stock.getTodayTick(options, function(err, data) {
+stock.getTodayTick(options).then(({ data }) => {
   console.log(data);
 });
 ```
@@ -122,7 +123,7 @@ tushare.stock.getTodayTick(options, function(err, data) {
 
 ## 6. 大盘指数行情数据
 ```
-tushare.stock.getIndex(function(err, data) {
+stock.getIndex().then(({ data }) => {
   console.log(data);
 });
 ```
@@ -133,7 +134,7 @@ var options = {
   code: '600848',
   volume: 700
 };
-tushare.stock.getSinaDD(options, function(err, data) {
+stock.getSinaDD(options).then(({ data }) => {
   console.log(data);
 });
 ```
@@ -151,7 +152,7 @@ tushare.stock.getSinaDD(options, function(err, data) {
 ## 1. 获取新浪行业分类信息
 比如：房地产、电子信息、钢铁行业等等新浪行业分类信息
 ```
-tushare.stock.getSinaIndustryClassified(function(err, data) {
+stock.getSinaIndustryClassified().then(({ data }) => {
   console.log(data);
 });
 ```
@@ -162,7 +163,7 @@ tushare.stock.getSinaIndustryClassified(function(err, data) {
 var options = {
   tag: 'new_jrhy'
 };
-tushare.stock.getSinaClassifyDetails(options, function(err, data) {
+stock.getSinaClassifyDetails(options).then(({ data }) => {
   console.log(data);
 });
 ```
@@ -177,28 +178,28 @@ tushare.stock.getSinaClassifyDetails(options, function(err, data) {
 ## 3. 获取新浪概念分类信息
 返回数据中的tag可用于上面（#2）的接口，用于获取某个概念分类的具体信息
 ```
-tushare.stock.getSinaConceptsClassified(function(err, data) {
+stock.getSinaConceptsClassified().then(({ data }) => {
   console.log(data);
 });
 ```
 
 ## 4. 获取所有上市公司股票基本信息
 ```
-tushare.stock.getAllStocks(function(err, data) {
+stock.getAllStocks().then(({ data }) => {
   console.log(data);
 });
 ```
 
 ## 5. 获取沪深300股票信息
 ```
-tushare.stock.getHS300(function(err, data) {
+stock.getHS300().then(({ data }) => {
   console.log(data);
 });
 ```
 
 ## 6. 获取上证50股票信息
 ```
-tushare.stock.getSZ50(function(err, data) {
+stock.getSZ50().then(({ data }) => {
   console.log(data);
 });
 ```
@@ -213,7 +214,7 @@ tushare.stock.getSZ50(function(err, data) {
     pageNo: 1,
     pageSize: 150
   };
-  tushare.stock.lhb(options, function(err, data) {
+  stock.lhb(options).then(({ data }) => {
     console.log(data);
   });
 ```
@@ -236,7 +237,7 @@ pageSize: optional, default: 150）
     pageNo: 1,
     pageSize: 150
   };
-  tushare.stock.blockTeade(options, function(err, data) {
+  stock.blockTeade(options).then(({ data }) => {
     console.log(data);
   });
 ```

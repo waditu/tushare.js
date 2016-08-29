@@ -1,22 +1,25 @@
-var tushare = require('../lib/index');
-var test = require('tape');
+import test from 'ava';
+import { stock } from '../lib';
 
-test('Get default classifying Details', function(t) {
+test('Get default classifying Details', t => {
   t.plan(2);
-  tushare.stock.getSinaClassifyDetails(function(err, data) {
-    t.ok(Object.prototype.toString.apply(data) === '[object Array]', 'It should return an array of stocks of an industry');
-    t.ok(data.length > 0, 'It should return more than one stocks in an industry');
+  return stock.getSinaClassifyDetails().then(({ data }) => {
+    console.log(data);
+    t.truthy(Object.prototype.toString.apply(data) === '[object Array]',
+      'It should return an array of stocks of an industry');
+    t.truthy(data.length > 0, 'It should return more than one stocks in an industry');
   });
 });
 
-test('Get specified classifying Details', function(t) {
+test('Get specified classifying Details', t => {
   t.plan(2);
-  var options = {
-    tag: 'gn_zndw'
+  const options = {
+    tag: 'gn_zndw',
   };
-  tushare.stock.getSinaClassifyDetails(options, function(err, data) {
+  return stock.getSinaClassifyDetails(options).then(({ data }) => {
     console.log(data);
-    t.ok(Object.prototype.toString.apply(data) === '[object Array]', 'It should return an array of stocks of an industry');
-    t.ok(data.length > 0, 'It should return more than one stocks in an industry');
+    t.truthy(Object.prototype.toString.apply(data) === '[object Array]',
+      'It should return an array of stocks of an industry');
+    t.truthy(data.length > 0, 'It should return more than one stocks in an industry');
   });
 });

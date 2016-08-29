@@ -1,10 +1,12 @@
-var tushare = require('../lib/index');
-var test = require('tape');
+import test from 'ava';
+import { stock } from '../lib';
 
-test('Get Concepts Classify', function(t) {
+test('Get Concepts Classify', t => {
   t.plan(2);
-  tushare.stock.getSinaConceptsClassified(function(err, data) {
-    t.ok(Object.prototype.toString.apply(data) === '[object Array]', 'It should return an array concepts classified data');
-    t.ok(data.length > 0, 'It should return more than one concepts classified data');
+  return stock.getSinaConceptsClassified().then(({ data }) => {
+    console.log(JSON.stringify(data));
+    t.truthy(Object.prototype.toString.apply(data) === '[object Array]',
+      'It should return an array concepts classified data');
+    t.truthy(data.length > 0, 'It should return more than one concepts classified data');
   });
 });

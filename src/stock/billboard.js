@@ -1,11 +1,7 @@
-import request from 'superagent-charset';
-import moment from 'moment';
-import {
-  lhbUrl,
-  blockTradeUrl,
-  longPeriodRankUrl
-} from './urls';
-import { codeToSymbol } from './util';
+import { lhbUrl, blockTradeUrl, longPeriodRankUrl } from './urls';
+import { codeToSymbol, checkStatus } from './util';
+import { DATE_NOW } from './cons.js';
+import '../utils/fetch';
 
 /**
  * lhb - 获取龙虎榜数据
@@ -21,57 +17,40 @@ import { codeToSymbol } from './util';
  *    amount: 成交额（万）
  *  }
  * ]
- *
- * @param options
- * @param cb
- * @returns {undefined}
  */
-export function lhb(options, cb) {
+export const lhb = (query = {}) => {
   const defaults = {
-    start: moment().format('YYYY-MM-DD'),
-    end: moment().format('YYYY-MM-DD'),
+    start: DATE_NOW,
+    end: DATE_NOW,
     pageNo: 1,
-    pageSize: 150
+    pageSize: 150,
   };
-  if(Object.prototype.toString.apply(options) === '[object Function]') {
-    cb = options;
-    options = {};
-  }
-  options = Object.assign(defaults, options);
+  const options = Object.assign({}, defaults, query);
   const url = lhbUrl(options.start, options.end, options.pageNo, options.pageSize);
+  const mapData = data => {
+    const result = {};
+    result.page = data.page + 1;
+    result.total = data.total;
+    result.pageCount = data.pagecount;
+    result.items = data.list.map((item) => ({
+      symbol: codeToSymbol(item.SYMBOL),
+      name: item.SNAME,
+      price: item.TCLOSE,
+      date: item.TDATE,
+      changePercent: item.PCHG,
+      type: item.SMEBTSTOCK1,
+      volume: item.VOTURNOVER * 100,
+      amount: item.VATURNOVER * 100,
+    }));
+    return { data: result };
+  };
 
-  request
-    .get(url)
-    .charset('gbk')
-    .buffer()
-    .end(function(err, res) {
-      if(err || !res.ok) {
-        cb(err);
-      } else if(res.text) {
-        let result = {};
-        let data = JSON.parse(res.text);
-        result.page = data.page + 1;
-        result.total = data.total;
-        result.pageCount = data.pagecount;
-        result.items = data.list.map((item) => {
-          return {
-            symbol: codeToSymbol(item.SYMBOL),
-            name: item.SNAME,
-            price: item.TCLOSE,
-            date: item.TDATE,
-            changePercent: item.PCHG,
-            type: item.SMEBTSTOCK1,
-            volume: item.VOTURNOVER * 100,
-            amount: item.VATURNOVER * 100
-          };
-        });
-
-        cb(null, result);
-      } else {
-        cb(null, {});
-      }
-    });
-}
+  return fetch(url)
+  .then(checkStatus)
+  .then(res => res.json())
+  .then(mapData)
+  .catch(error => ({ error }));
+};
 
 /**
  * blockTrade - 大宗交易
@@ -90,59 +69,42 @@ export function lhb(options, cb) {
  *    dopRate: 折溢价率
  *  }
  * ]
- *
- * @param options
- * @param cb
- * @returns {undefined}
  */
-export function blockTrade(options, cb) {
+export const blockTrade = (query = {}) => {
   const defaults = {
-    start: moment().format('YYYY-MM-DD'),
-    end: moment().format('YYYY-MM-DD'),
+    start: DATE_NOW,
+    end: DATE_NOW,
     pageNo: 1,
-    pageSize: 150
+    pageSize: 150,
   };
-  if(Object.prototype.toString.apply(options) === '[object Function]') {
-    cb = options;
-    options = {};
-  }
-  options = Object.assign(defaults, options);
+  const options = Object.assign({}, defaults, query);
   const url = blockTradeUrl(options.start, options.end, options.pageNo, options.pageSize);
+  const mapData = data => {
+    const result = {};
+    result.page = data.page + 1;
+    result.total = data.total;
+    result.pageCount = data.pagecount;
+    result.items = data.list.map(item => ({
+      symbol: codeToSymbol(item.SYMBOL),
+      name: item.SNAME,
+      dealPrice: item.DZJY5,
+      price: item.TCLOSE,
+      date: item.PUBLISHDATE,
+      volume: item.DZJY2 * 100,
+      amount: item.DZJY6,
+      buyer: item.DZJY9,
+      seller: item.DZJY11,
+      dopRate: item.DZJY55,
+    }));
+    return { data: result };
+  };
 
-  request
-    .get(url)
-    .charset('gbk')
-    .buffer()
-    .end(function(err, res) {
-      if(err || !res.ok) {
-        cb(err);
-      } else if(res.text) {
-        let result = {};
-        let data = JSON.parse(res.text);
-        result.page = data.page + 1;
-        result.total = data.total;
-        result.pageCount = data.pagecount;
-        result.items = data.list.map((item) => {
-          return {
-            symbol: codeToSymbol(item.SYMBOL),
-            name: item.SNAME,
-            dealPrice: item.DZJY5,
-            price: item.TCLOSE,
-            date: item.PUBLISHDATE,
-            volume: item.DZJY2 * 100,
-            amount: item.DZJY6,
-            buyer: item.DZJY9,
-            seller: item.DZJY11,
-            dopRate: item.DZJY55
-          };
-        });
-
-        cb(null, result);
-      } else {
-        cb(null, {});
-      }
-    });
-}
+  return fetch(url)
+  .then(checkStatus)
+  .then(res => res.json())
+  .then(mapData)
+  .catch(error => ({ error }));
+};
 
 /**
  * longPeriodRank - 长期阶段涨跌幅
@@ -161,55 +123,38 @@ export function blockTrade(options, cb) {
  *    yearPercent: 年度涨跌幅
  *  }
  * ]
- *
- * @param options
- * @param cb
- * @returns {undefined}
  */
-export function longPeriodRank(options, cb) {
+export const longPeriodRank = (query = {}) => {
   const defaults = {
     period: 'month',
     pageNo: 1,
-    pageSize: 100
+    pageSize: 100,
   };
-  if(Object.prototype.toString.apply(options) === '[object Function]') {
-    cb = options;
-    options = {};
-  }
-  options = Object.assign(defaults, options);
+  const options = Object.assign({}, defaults, query);
   const url = longPeriodRankUrl(options.period, options.pageNo, options.pageSize);
+  const mapData = data => {
+    const result = {};
+    result.page = data.page + 1;
+    result.total = data.total;
+    result.pageCount = data.pagecount;
+    result.items = data.list.map((item) => ({
+      symbol: codeToSymbol(item.CODE),
+      name: item.NAME,
+      price: item.PRICE,
+      date: item.LONG_PERIOD_RANK.TIME,
+      dayPercent: item['PERCENT'],
+      weekPercent: item['LONG_PERIOD_RANK']['WEEK_PERCENT'],
+      monthPercent: item['LONG_PERIOD_RANK']['MONTH_PERCENT'],
+      quarterPercent: item['LONG_PERIOD_RANK']['QUARTER_PERCENT'],
+      halfYearPercent: item['LONG_PERIOD_RANK']['HALF_YEAR_PERCENT'],
+      yearPercent: item['LONG_PERIOD_RANK']['YEAR_PERCENT'],
+    }));
+    return { data: result };
+  };
 
-  request
-    .get(url)
-    .charset('gbk')
-    .buffer()
-    .end(function(err, res) {
-      if(err || !res.ok) {
-        cb(err);
-      } else if(res.text) {
-        let result = {};
-        let data = JSON.parse(res.text);
-        result.page = data.page + 1;
-        result.total = data.total;
-        result.pageCount = data.pagecount;
-        result.items = data.list.map((item) => {
-          return {
-            symbol: codeToSymbol(item.CODE),
-            name: item.NAME,
-            price: item.PRICE,
-            date: item.LONG_PERIOD_RANK.TIME,
-            dayPercent: item['PERCENT'],
-            weekPercent: item['LONG_PERIOD_RANK']['WEEK_PERCENT'],
-            monthPercent: item['LONG_PERIOD_RANK']['MONTH_PERCENT'],
-            quarterPercent: item['LONG_PERIOD_RANK']['QUARTER_PERCENT'],
-            halfYearPercent: item['LONG_PERIOD_RANK']['HALF_YEAR_PERCENT'],
-            yearPercent: item['LONG_PERIOD_RANK']['YEAR_PERCENT']
-          };
-        });
-
-        cb(null, result);
-      } else {
-        cb(null, {});
-      }
-    });
-}
+  return fetch(url)
+  .then(checkStatus)
+  .then(res => res.json())
+  .then(mapData)
+  .catch(error => ({ error }));
+};
