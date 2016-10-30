@@ -43,6 +43,7 @@ code: {String} 股票代码，6位数字代码
 ktype: {String} 数据类型，day=日k线 week=周 month=月 5=5分钟 15=15分钟 30=30分钟 60=60分钟，默认为day
 start: {String} 开始日期，格式YYYY-MM-DD
 end: {String} 结束日期，格式YYYY-MM-DD
+autype: {String} 复权，默认前复权(fq), 不复权(last)
 }
 ```
 
