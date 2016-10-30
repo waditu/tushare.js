@@ -1,5 +1,3 @@
-import request from 'superagent-charset';
-import moment from 'moment';
 import {
   priceUrl,
   tickUrl,
@@ -9,9 +7,8 @@ import {
   indexUrl,
   sinaDDUrl,
 } from './urls';
-import { codeToSymbol, checkStatus } from './util';
+import { codeToSymbol, checkStatus, DATE_NOW } from './util';
 import { charset } from '../utils/charset';
-import { DATE_NOW } from './util';
 import '../utils/fetch';
 
 /**
@@ -23,6 +20,7 @@ import '../utils/fetch';
  * @param {String} options.start - 开始日期 format：YYYY-MM-DD 为空时取到API所提供的最早日期数据
  * @param {String} options.end - 结束日期 format：YYYY-MM-DD 为空时取到最近一个交易日数据
  * @param {String} options.ktype - 数据类型，day=日k线 week=周 month=月 5=5分钟 15=15分钟 30=30分钟 60=60分钟，默认为day
+ * @param {String} options.autype - 复权类型，默认前复权, fq=前复权, last=不复权
  * @param cb
  * @return {undefined}
  */
@@ -32,11 +30,12 @@ export const getHistory = (query = {}) => {
     start: null,
     end: null,
     ktype: 'day',
+    autype: 'fq',
   };
   const options = Object.assign({}, defaults, query);
 
   const symbol = codeToSymbol(options.code);
-  const url = priceUrl(options.ktype, symbol);
+  const url = priceUrl(options.ktype, options.autype, symbol);
 
   return fetch(url)
   .then(checkStatus)

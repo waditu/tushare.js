@@ -1,8 +1,8 @@
 import { K_TYPE, CUR_YEAR, CUR_MONTH } from './cons';
 
-export const priceUrl = (ktype, symbol) => {
+export const priceUrl = (ktype, autype, symbol) => {
   const _ktype = K_TYPE[ktype] ? K_TYPE[ktype] : K_TYPE.minute;
-  const type = _ktype === K_TYPE.minute ? ktype : 'last';
+  const type = _ktype === K_TYPE.minute ? ktype : autype;
   const codeStr = _ktype === K_TYPE.minute ? 'scode' : 'code';
   return `http://api.finance.ifeng.com/${_ktype}/?${codeStr}=${symbol}&type=${type}`;
 };
