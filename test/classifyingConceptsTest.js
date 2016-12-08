@@ -1,5 +1,5 @@
 import test from 'ava';
-import { stock } from '../lib';
+import { stock } from '../src';
 
 test('Get Concepts Classify', t => {
   t.plan(2);
