@@ -4,3 +4,5 @@ dist
 lib
 .idea
 *.iml
+coverage
+.nyc_output

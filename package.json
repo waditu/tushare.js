@@ -4,7 +4,7 @@
   "description": "port of tushare for nodejs",
   "main": "lib/index.js",
   "scripts": {
-    "test": "ava",
+    "test": "./node_modules/.bin/ava --require babel-register  test/*",
     "build": "./node_modules/babel-cli/bin/babel.js src --out-dir lib",
     "build:watch": "./node_modules/babel-cli/bin/babel.js src --out-dir lib --watch",
     "prepublish": "npm run build"
