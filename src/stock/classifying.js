@@ -1,14 +1,14 @@
-import request from 'superagent-charset';
 import {
-  sinaIndustryIndexUrl,
-  sinaClassifyDetailUrl,
-  sinaConceptsIndexUrl,
-  allStockUrl,
-  hs300Url,
-  sz50Url,
+    sinaIndustryIndexUrl,
+    sinaClassifyDetailUrl,
+    sinaConceptsIndexUrl,
+    allStockUrl,
+    hs300Url,
+    sz50Url,
+    xsgUrl,
 } from './urls';
-import { csvToObject, arrayObjectMapping, checkStatus } from './util';
-import { charset } from '../utils/charset';
+import {csvToObject, arrayObjectMapping, checkStatus} from './util';
+import {charset} from '../utils/charset';
 import '../utils/fetch';
 
 /**
@@ -29,36 +29,36 @@ import '../utils/fetch';
  * leadingName: 领涨股名称
  */
 export const getSinaIndustryClassified = () => {
-  const url = sinaIndustryIndexUrl();
-  const mapData = data => {
-    const result = [];
-    const json = JSON.parse(data.split('=')[1].trim());
-    Object.keys(json).forEach(tag => {
-      const industryArr = json[tag].split(',');
-      result.push({
-        tag: industryArr[0],
-        name: industryArr[1],
-        num: industryArr[2],
-        price: industryArr[3],
-        changePrice: industryArr[4],
-        changePercent: industryArr[5],
-        volume: industryArr[6] / 100,
-        amount: industryArr[7] / 10000,
-        leadingSymbol: industryArr[8],
-        leadingChangePercent: industryArr[9],
-        leadingPrice: industryArr[10],
-        leadingChangePrice: industryArr[11],
-        leadingName: industryArr[12],
-      });
-    });
-    return { data: result };
-  };
+    const url = sinaIndustryIndexUrl();
+    const mapData = data => {
+        const result = [];
+        const json = JSON.parse(data.split('=')[1].trim());
+        Object.keys(json).forEach(tag => {
+            const industryArr = json[tag].split(',');
+            result.push({
+                tag: industryArr[0],
+                name: industryArr[1],
+                num: industryArr[2],
+                price: industryArr[3],
+                changePrice: industryArr[4],
+                changePercent: industryArr[5],
+                volume: industryArr[6] / 100,
+                amount: industryArr[7] / 10000,
+                leadingSymbol: industryArr[8],
+                leadingChangePercent: industryArr[9],
+                leadingPrice: industryArr[10],
+                leadingChangePrice: industryArr[11],
+                leadingName: industryArr[12],
+            });
+        });
+        return {data: result};
+    };
 
-  return fetch(url, { disableDecoding: true })
-  .then(checkStatus)
-  .then(charset('GBK'))
-  .then(mapData)
-  .catch(error => ({ error }));
+    return fetch(url, {disableDecoding: true})
+        .then(checkStatus)
+        .then(charset('GBK'))
+        .then(mapData)
+        .catch(error => ({error}));
 };
 
 /**
@@ -87,37 +87,37 @@ export const getSinaIndustryClassified = () => {
  */
 /* eslint-disable no-eval */
 export const getSinaClassifyDetails = (query = {}) => {
-  const defaults = {
-    tag: 'new_jrhy', // 默认金融行业
-  };
-  const options = Object.assign({}, defaults, query);
-  const url = sinaClassifyDetailUrl(options.tag);
-  const mapData = data => {
-    let result = [];
-    result = eval(data);
-    if (result) {
-      result = result.map(ele => ({
-        symbol: ele.symbol,
-        name: ele.name,
-        price: ele.trade,
-        changePrice: ele.pricechange,
-        changePercent: ele.changepercent,
-        open: ele.open,
-        high: ele.high,
-        low: ele.low,
-        volume: ele.volume / 100,
-        amount: ele.amount / 10000,
-        tickTime: ele.ticktime,
-      }));
-    }
-    return { data: result };
-  };
+    const defaults = {
+        tag: 'new_jrhy', // 默认金融行业
+    };
+    const options = Object.assign({}, defaults, query);
+    const url = sinaClassifyDetailUrl(options.tag);
+    const mapData = data => {
+        let result = [];
+        result = eval(data);
+        if (result) {
+            result = result.map(ele => ({
+                symbol: ele.symbol,
+                name: ele.name,
+                price: ele.trade,
+                changePrice: ele.pricechange,
+                changePercent: ele.changepercent,
+                open: ele.open,
+                high: ele.high,
+                low: ele.low,
+                volume: ele.volume / 100,
+                amount: ele.amount / 10000,
+                tickTime: ele.ticktime,
+            }));
+        }
+        return {data: result};
+    };
 
-  return fetch(url, { disableDecoding: true })
-  .then(checkStatus)
-  .then(charset('GBK'))
-  .then(mapData)
-  .catch(error => ({ error }));
+    return fetch(url, {disableDecoding: true})
+        .then(checkStatus)
+        .then(charset('GBK'))
+        .then(mapData)
+        .catch(error => ({error}));
 };
 
 /**
@@ -141,34 +141,34 @@ export const getSinaClassifyDetails = (query = {}) => {
  * @returns {undefined}
  */
 export const getSinaConceptsClassified = () => {
-  const url = sinaConceptsIndexUrl();
-  const mapData = data => {
-    const json = JSON.parse(data.split('=')[1].trim());
-    const result = Object.keys(json).map(tag => {
-      const conceptsArr = json[tag].split(',');
-      return {
-        name: conceptsArr[1],
-        num: conceptsArr[2],
-        price: conceptsArr[3],
-        changePrice: conceptsArr[4],
-        changePercent: conceptsArr[5],
-        volume: conceptsArr[6] / 100,
-        amount: conceptsArr[7] / 10000,
-        leadingSymbol: conceptsArr[8],
-        leadingChangePercent: conceptsArr[9],
-        leadingPrice: conceptsArr[10],
-        leadingChangePrice: conceptsArr[11],
-        leadingName: conceptsArr[12],
-      };
-    });
-    return { data: result };
-  };
+    const url = sinaConceptsIndexUrl();
+    const mapData = data => {
+        const json = JSON.parse(data.split('=')[1].trim());
+        const result = Object.keys(json).map(tag => {
+            const conceptsArr = json[tag].split(',');
+            return {
+                name: conceptsArr[1],
+                num: conceptsArr[2],
+                price: conceptsArr[3],
+                changePrice: conceptsArr[4],
+                changePercent: conceptsArr[5],
+                volume: conceptsArr[6] / 100,
+                amount: conceptsArr[7] / 10000,
+                leadingSymbol: conceptsArr[8],
+                leadingChangePercent: conceptsArr[9],
+                leadingPrice: conceptsArr[10],
+                leadingChangePrice: conceptsArr[11],
+                leadingName: conceptsArr[12],
+            };
+        });
+        return {data: result};
+    };
 
-  return fetch(url)
-  .then(checkStatus)
-  .then(charset('GBK'))
-  .then(mapData)
-  .catch(error => ({ error }));
+    return fetch(url)
+        .then(checkStatus)
+        .then(charset('GBK'))
+        .then(mapData)
+        .catch(error => ({error}));
 };
 
 /**
@@ -199,13 +199,13 @@ export const getSinaConceptsClassified = () => {
  * @returns {undefined}
  */
 export const getAllStocks = () => {
-  const url = allStockUrl();
+    const url = allStockUrl();
 
-  return fetch(url)
-  .then(checkStatus)
-  .then(charset('GBK'))
-  .then(data => ({ data: csvToObject(data) }))
-  .catch(error => ({ error }));
+    return fetch(url)
+        .then(checkStatus)
+        .then(charset('GBK'))
+        .then(data => ({data: csvToObject(data)}))
+        .catch(error => ({error}));
 };
 
 /**
@@ -237,13 +237,13 @@ export const getAllStocks = () => {
  * @returns {undefined}
  */
 export const getHS300 = () => {
-  const url = hs300Url();
+    const url = hs300Url();
 
-  return fetch(url)
-  .then(checkStatus)
-  .then(res => res.json())
-  .then(json => ({ data: arrayObjectMapping(json[0].fields, json[0].items) }))
-  .catch(error => ({ error }));
+    return fetch(url)
+        .then(checkStatus)
+        .then(res => res.json())
+        .then(json => ({data: arrayObjectMapping(json[0].fields, json[0].items)}))
+        .catch(error => ({error}));
 };
 
 /**
@@ -275,11 +275,58 @@ export const getHS300 = () => {
  * @returns {undefined}
  */
 export const getSZ50 = () => {
-  const url = sz50Url();
+    const url = sz50Url();
 
-  return fetch(url)
-  .then(checkStatus)
-  .then(res => res.json())
-  .then(json => ({ data: arrayObjectMapping(json[0].fields, json[0].items) }))
-  .catch(error => ({ error }));
+    return fetch(url)
+        .then(checkStatus)
+        .then(res => res.json())
+        .then(json => ({data: arrayObjectMapping(json[0].fields, json[0].items)}))
+        .catch(error => ({error}));
 };
+
+/**
+ * 获取指定年月限售解禁股数据
+ * 返回数据格式: 数组
+ * [
+ *   {
+ *     symbol: 股票代码
+ *     name: 股票名称
+ *     date: 解除限售日期
+ *     percent: 占总股本比例
+ *     count: 数量（万股）
+ *     close: 最新收盘价（元）
+ *     curTotalValue: 当前市值（亿元）
+ *   }
+ * ]
+ * @param year
+ * @param month
+ * @returns {Promise.<TResult>}
+ */
+export const getXSGData = (year, month) => {
+    const url = xsgUrl(year, month);
+    return fetch(url)
+        .then(checkStatus)
+        .then(res => {
+            return res.text().then(result => {
+                return result
+            });
+        })
+        .then(data => {
+            data = JSON.parse(data.substring(1, data.length - 1));
+            data = data.map(item => {
+                let itemData = item.split(',');
+                return {
+                    symbol: itemData[1],
+                    name: itemData[3],
+                    date: itemData[4],
+                    percent: itemData[6],
+                    count: (itemData[5] / 10000).toFixed(2),
+                    close: itemData[7],
+                    curTotalValue: (itemData[8] / 100000000).toFixed(4)
+                }
+            })
+            return data;
+        })
+        .catch(error => ({error}));
+}
+

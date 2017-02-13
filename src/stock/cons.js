@@ -21,3 +21,5 @@ export const INDEX_LIST = {
 };
 
 export const DATE_NOW = moment().format('YYYY-MM-DD');
+export const CUR_YEAR = DATE_NOW.split('-')[0];
+export const CUR_MONTH = DATE_NOW.split('-')[1];
