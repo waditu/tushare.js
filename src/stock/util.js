@@ -30,7 +30,7 @@ export function csvToObject(csv) {
 }
 
 export function arrayObjectMapping(fields, items) {
-  const itemsArr = items.map((ele) => {
+  return items.map((ele) => {
     const obj = {};
     ele.forEach((s, i) => {
       const field = fields[i];
@@ -44,11 +44,9 @@ export function arrayObjectMapping(fields, items) {
     });
     return obj;
   });
-
-  return itemsArr;
 }
 
-export const checkStatus = response => {
+export const checkStatus = (response) => {
   if (response.status >= 200 && response.status < 300) {
     return response;
   }
