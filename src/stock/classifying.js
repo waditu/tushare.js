@@ -1,11 +1,11 @@
-import request from 'superagent-charset';
 import {
-  sinaIndustryIndexUrl,
-  sinaClassifyDetailUrl,
-  sinaConceptsIndexUrl,
-  allStockUrl,
-  hs300Url,
-  sz50Url,
+    sinaIndustryIndexUrl,
+    sinaClassifyDetailUrl,
+    sinaConceptsIndexUrl,
+    allStockUrl,
+    hs300Url,
+    sz50Url,
+    xsgUrl,
 } from './urls';
 import { csvToObject, arrayObjectMapping, checkStatus } from './util';
 import { charset } from '../utils/charset';
@@ -55,10 +55,10 @@ export const getSinaIndustryClassified = () => {
   };
 
   return fetch(url, { disableDecoding: true })
-  .then(checkStatus)
-  .then(charset('GBK'))
-  .then(mapData)
-  .catch(error => ({ error }));
+        .then(checkStatus)
+        .then(charset('GBK'))
+        .then(mapData)
+        .catch(error => ({ error }));
 };
 
 /**
@@ -114,10 +114,10 @@ export const getSinaClassifyDetails = (query = {}) => {
   };
 
   return fetch(url, { disableDecoding: true })
-  .then(checkStatus)
-  .then(charset('GBK'))
-  .then(mapData)
-  .catch(error => ({ error }));
+        .then(checkStatus)
+        .then(charset('GBK'))
+        .then(mapData)
+        .catch(error => ({ error }));
 };
 
 /**
@@ -165,10 +165,10 @@ export const getSinaConceptsClassified = () => {
   };
 
   return fetch(url)
-  .then(checkStatus)
-  .then(charset('GBK'))
-  .then(mapData)
-  .catch(error => ({ error }));
+        .then(checkStatus)
+        .then(charset('GBK'))
+        .then(mapData)
+        .catch(error => ({ error }));
 };
 
 /**
@@ -202,10 +202,10 @@ export const getAllStocks = () => {
   const url = allStockUrl();
 
   return fetch(url)
-  .then(checkStatus)
-  .then(charset('GBK'))
-  .then(data => ({ data: csvToObject(data) }))
-  .catch(error => ({ error }));
+        .then(checkStatus)
+        .then(charset('GBK'))
+        .then(data => ({ data: csvToObject(data) }))
+        .catch(error => ({ error }));
 };
 
 /**
@@ -240,10 +240,10 @@ export const getHS300 = () => {
   const url = hs300Url();
 
   return fetch(url)
-  .then(checkStatus)
-  .then(res => res.json())
-  .then(json => ({ data: arrayObjectMapping(json[0].fields, json[0].items) }))
-  .catch(error => ({ error }));
+        .then(checkStatus)
+        .then(res => res.json())
+        .then(json => ({ data: arrayObjectMapping(json[0].fields, json[0].items) }))
+        .catch(error => ({ error }));
 };
 
 /**
@@ -278,8 +278,52 @@ export const getSZ50 = () => {
   const url = sz50Url();
 
   return fetch(url)
-  .then(checkStatus)
-  .then(res => res.json())
-  .then(json => ({ data: arrayObjectMapping(json[0].fields, json[0].items) }))
-  .catch(error => ({ error }));
+        .then(checkStatus)
+        .then(res => res.json())
+        .then(json => ({ data: arrayObjectMapping(json[0].fields, json[0].items) }))
+        .catch(error => ({ error }));
 };
+
+/**
+ * 获取指定年月限售解禁股数据
+ * 返回数据格式: 数组
+ * [
+ *   {
+ *     symbol: 股票代码
+ *     name: 股票名称
+ *     date: 解除限售日期
+ *     percent: 占总股本比例
+ *     count: 数量（万股）
+ *     close: 最新收盘价（元）
+ *     curTotalValue: 当前市值（亿元）
+ *   }
+ * ]
+ * @param year
+ * @param month
+ * @returns {Promise.<TResult>}
+ */
+export const getXSGData = (year, month) => {
+  const url = xsgUrl(year, month);
+  const mapData = data => {
+    let arr = JSON.parse(data.substring(1, data.length - 1));
+    arr = arr.map(item => {
+      const itemData = item.split(',');
+      return {
+        symbol: itemData[1],
+        name: itemData[3],
+        date: itemData[4],
+        percent: itemData[6],
+        count: (itemData[5] / 10000).toFixed(2),
+        close: itemData[7],
+        curTotalValue: (itemData[8] / 100000000).toFixed(4),
+      };
+    });
+    return arr;
+  };
+  return fetch(url)
+        .then(checkStatus)
+        .then(res => res.text().then(result => result))
+        .then(mapData)
+        .catch(error => ({ error }));
+};
+

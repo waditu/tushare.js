@@ -4,7 +4,7 @@
   "description": "port of tushare for nodejs",
   "main": "lib/index.js",
   "scripts": {
-    "test": "./node_modules/tape/bin/tape test/**/*.js",
+    "test": "ava",
     "build": "./node_modules/babel-cli/bin/babel.js src --out-dir lib",
     "build:watch": "./node_modules/babel-cli/bin/babel.js src --out-dir lib --watch",
     "prepublish": "npm run build"
@@ -48,8 +48,6 @@
     "eslint-plugin-import": "^1.14.0",
     "eslint-plugin-jsx-a11y": "^2.1.0",
     "eslint-plugin-react": "^6.1.2",
-    "tap-spec": "^4.1.1",
-    "tape": "^4.4.0",
     "webpack": "^1.12.9"
   }
 }

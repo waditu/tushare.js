@@ -2,10 +2,10 @@ import { INDEX_LABELS, INDEX_LIST } from './cons';
 
 export function codeToSymbol(code) {
   let symbol = '';
-  if(INDEX_LABELS.indexOf(code) >= 0) {
+  if (INDEX_LABELS.indexOf(code) >= 0) {
     symbol = INDEX_LIST[code];
-  } else if(code.length === 6) {
-    symbol = ['5', '6', '9'].indexOf(code.charAt(0)) >= 0 ? 'sh' + code : 'sz' + code;
+  } else if (code.length === 6) {
+    symbol = ['5', '6', '9'].indexOf(code.charAt(0)) >= 0 ? `sh${code}` : `sz${code}`;
   } else {
     symbol = code;
   }
@@ -18,9 +18,9 @@ export function csvToObject(csv) {
   let headers = csvArr.splice(0, 1);
 
   headers = headers[0].split(',');
-  csvArr = csvArr.map(function(ele) {
-    let obj = {};
-    ele.split(',').forEach(function(s, i) {
+  csvArr = csvArr.map((ele) => {
+    const obj = {};
+    ele.split(',').forEach((s, i) => {
       obj[headers[i]] = s;
     });
     return obj;
@@ -30,13 +30,13 @@ export function csvToObject(csv) {
 }
 
 export function arrayObjectMapping(fields, items) {
-  items = items.map(function(ele) {
-    let obj = {};
-    ele.forEach(function(s, i) {
-      let field = fields[i];
-      if(field === 'volume') {
+  const itemsArr = items.map((ele) => {
+    const obj = {};
+    ele.forEach((s, i) => {
+      const field = fields[i];
+      if (field === 'volume') {
         obj[field] = s / 100;
-      } else if(field === 'amount') {
+      } else if (field === 'amount') {
         obj[field] = s / 10000;
       } else {
         obj[field] = s;
@@ -45,7 +45,7 @@ export function arrayObjectMapping(fields, items) {
     return obj;
   });
 
-  return items;
+  return itemsArr;
 }
 
 export const checkStatus = response => {
