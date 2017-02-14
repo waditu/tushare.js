@@ -1,6 +1,6 @@
 import { lhbUrl, blockTradeUrl, longPeriodRankUrl } from './urls';
 import { codeToSymbol, checkStatus } from './util';
-import { DATE_NOW } from './cons.js';
+import { DATE_NOW } from './cons';
 import '../utils/fetch';
 
 /**
@@ -32,7 +32,7 @@ export const lhb = (query = {}) => {
     result.page = data.page + 1;
     result.total = data.total;
     result.pageCount = data.pagecount;
-    result.items = data.list.map((item) => ({
+    result.items = data.list.map(item => ({
       symbol: codeToSymbol(item.SYMBOL),
       name: item.SNAME,
       price: item.TCLOSE,
@@ -137,7 +137,7 @@ export const longPeriodRank = (query = {}) => {
     result.page = data.page + 1;
     result.total = data.total;
     result.pageCount = data.pagecount;
-    result.items = data.list.map((item) => ({
+    result.items = data.list.map(item => ({
       symbol: codeToSymbol(item.CODE),
       name: item.NAME,
       price: item.PRICE,

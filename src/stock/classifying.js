@@ -1,11 +1,11 @@
 import {
-    sinaIndustryIndexUrl,
-    sinaClassifyDetailUrl,
-    sinaConceptsIndexUrl,
-    allStockUrl,
-    hs300Url,
-    sz50Url,
-    xsgUrl,
+  sinaIndustryIndexUrl,
+  sinaClassifyDetailUrl,
+  sinaConceptsIndexUrl,
+  allStockUrl,
+  hs300Url,
+  sz50Url,
+  xsgUrl,
 } from './urls';
 import { csvToObject, arrayObjectMapping, checkStatus } from './util';
 import { charset } from '../utils/charset';
@@ -55,10 +55,10 @@ export const getSinaIndustryClassified = () => {
   };
 
   return fetch(url, { disableDecoding: true })
-        .then(checkStatus)
-        .then(charset('GBK'))
-        .then(mapData)
-        .catch(error => ({ error }));
+    .then(checkStatus)
+    .then(charset('GBK'))
+    .then(mapData)
+    .catch(error => ({ error }));
 };
 
 /**
@@ -114,10 +114,10 @@ export const getSinaClassifyDetails = (query = {}) => {
   };
 
   return fetch(url, { disableDecoding: true })
-        .then(checkStatus)
-        .then(charset('GBK'))
-        .then(mapData)
-        .catch(error => ({ error }));
+    .then(checkStatus)
+    .then(charset('GBK'))
+    .then(mapData)
+    .catch(error => ({ error }));
 };
 
 /**
@@ -165,10 +165,10 @@ export const getSinaConceptsClassified = () => {
   };
 
   return fetch(url)
-        .then(checkStatus)
-        .then(charset('GBK'))
-        .then(mapData)
-        .catch(error => ({ error }));
+    .then(checkStatus)
+    .then(charset('GBK'))
+    .then(mapData)
+    .catch(error => ({ error }));
 };
 
 /**
@@ -202,10 +202,10 @@ export const getAllStocks = () => {
   const url = allStockUrl();
 
   return fetch(url)
-        .then(checkStatus)
-        .then(charset('GBK'))
-        .then(data => ({ data: csvToObject(data) }))
-        .catch(error => ({ error }));
+    .then(checkStatus)
+    .then(charset('GBK'))
+    .then(data => ({ data: csvToObject(data) }))
+    .catch(error => ({ error }));
 };
 
 /**
@@ -240,10 +240,10 @@ export const getHS300 = () => {
   const url = hs300Url();
 
   return fetch(url)
-        .then(checkStatus)
-        .then(res => res.json())
-        .then(json => ({ data: arrayObjectMapping(json[0].fields, json[0].items) }))
-        .catch(error => ({ error }));
+    .then(checkStatus)
+    .then(res => res.json())
+    .then(json => ({ data: arrayObjectMapping(json[0].fields, json[0].items) }))
+    .catch(error => ({ error }));
 };
 
 /**
@@ -278,10 +278,10 @@ export const getSZ50 = () => {
   const url = sz50Url();
 
   return fetch(url)
-        .then(checkStatus)
-        .then(res => res.json())
-        .then(json => ({ data: arrayObjectMapping(json[0].fields, json[0].items) }))
-        .catch(error => ({ error }));
+    .then(checkStatus)
+    .then(res => res.json())
+    .then(json => ({ data: arrayObjectMapping(json[0].fields, json[0].items) }))
+    .catch(error => ({ error }));
 };
 
 /**
@@ -321,9 +321,9 @@ export const getXSGData = (year, month) => {
     return arr;
   };
   return fetch(url)
-        .then(checkStatus)
-        .then(res => res.text())
-        .then(mapData)
-        .catch(error => ({ error }));
+    .then(checkStatus)
+    .then(res => res.text())
+    .then(mapData)
+    .catch(error => ({ error }));
 };
 

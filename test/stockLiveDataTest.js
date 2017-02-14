@@ -10,7 +10,6 @@ test('Get Live Data', t => {
     ],
   };
   return stock.getLiveData(query).then(({ data }) => {
-    console.log(data);
     t.truthy(Object.prototype.toString.apply(data) === '[object Array]',
       'It should return an array of live data for the specified stock symbol');
 
