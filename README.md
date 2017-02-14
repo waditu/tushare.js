@@ -204,6 +204,13 @@ stock.getSZ50().then(({ data }) => {
 });
 ```
 
+## 7. 获取指定年月限售解禁股数据
+```
+stock.getXSGData().then(({ data }) => {
+  console.log(data);
+});
+```
+
 ## 龙虎榜
 
 ## 1. 龙虎榜单（来自网易财经）
