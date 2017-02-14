@@ -8,7 +8,6 @@ test('Get Tick Data', t => {
     end: '15:00:00',
   };
   return stock.getTodayTick(query).then(({ data }) => {
-    console.log(data);
     t.truthy(Object.prototype.toString.apply(data) === '[object Object]',
       'It should return the object of today tock price');
     t.truthy(Object.prototype.toString.apply(data.zhubi_list) === '[object Array]',

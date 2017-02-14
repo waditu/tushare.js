@@ -13,6 +13,7 @@
     "node": true
   },
   "rules": {
+    "arrow-parens": ["error", "as-needed"],
     "dot-notation": 0,
     "guard-for-in": 0,
     "no-underscore-dangle": 0,

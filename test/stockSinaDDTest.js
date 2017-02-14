@@ -8,7 +8,6 @@ test('Get Sina Highballing Data', t => {
     date: '2016-08-26',
   };
   return stock.getSinaDD(query).then(({ data }) => {
-    console.log(data);
     t.truthy(Object.prototype.toString.apply(data) === '[object Array]',
       'It should return an array of da dan data');
   });

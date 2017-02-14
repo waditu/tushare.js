@@ -18,7 +18,7 @@ export function csvToObject(csv) {
   let headers = csvArr.splice(0, 1);
 
   headers = headers[0].split(',');
-  csvArr = csvArr.map((ele) => {
+  csvArr = csvArr.map(ele => {
     const obj = {};
     ele.split(',').forEach((s, i) => {
       obj[headers[i]] = s;
@@ -30,7 +30,7 @@ export function csvToObject(csv) {
 }
 
 export function arrayObjectMapping(fields, items) {
-  return items.map((ele) => {
+  return items.map(ele => {
     const obj = {};
     ele.forEach((s, i) => {
       const field = fields[i];
@@ -46,7 +46,7 @@ export function arrayObjectMapping(fields, items) {
   });
 }
 
-export const checkStatus = (response) => {
+export const checkStatus = response => {
   if (response.status >= 200 && response.status < 300) {
     return response;
   }
