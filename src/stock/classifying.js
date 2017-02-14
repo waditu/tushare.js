@@ -322,7 +322,7 @@ export const getXSGData = (year, month) => {
   };
   return fetch(url)
         .then(checkStatus)
-        .then(res => res.text().then(result => result))
+        .then(res => res.text())
         .then(mapData)
         .catch(error => ({ error }));
 };
