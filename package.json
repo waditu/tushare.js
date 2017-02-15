@@ -1,6 +1,6 @@
 {
   "name": "tushare",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "port of tushare for nodejs",
   "main": "lib/index.js",
   "scripts": {
