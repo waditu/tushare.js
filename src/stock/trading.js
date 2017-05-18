@@ -7,6 +7,8 @@ import {
   indexUrl,
   sinaDDUrl,
 } from './urls';
+
+import * as cons from './cons';
 import { codeToSymbol, checkStatus, DATE_NOW } from './util';
 import { charset } from '../utils/charset';
 import '../utils/fetch';
@@ -43,6 +45,79 @@ export const getHistory = (query = {}) => {
   .then(json => ({ data: json }))
   .catch(error => ({ error }));
 };
+
+const _getKDataLong = (options = {}) => {
+  const kline = options.autype;
+  var fqyear = options.autype;
+  var autype = '';
+  var kline = '';
+  var autype = '';
+  const symbol = codeToSymbol(options.code);
+  var fq = '';
+  var symbol = '';
+  if (options.autype !== null &&  options.autype !== '' ) {
+      autype = options.autype;
+  }
+  if (options.autype !== '') {
+      autype = options.autype;
+  }
+
+  if (options.index) {
+      
+  } else {
+      symbol = codeToSymbol(options.code);
+  }
+
+  if (autype !== '') {
+      kline = 'fq';
+  }
+
+  const url = klineTTUrl('http://','gtimg.cn',kline,options.autype,options.code,, symbol);
+
+  return fetch(url)
+  .then(checkStatus)
+  .then(res => res.json())
+  .then(json => ({ data: json }))
+  .catch(error => ({ error }));
+};
+
+const _getKDataShort = (options = {}) => {
+
+};
+/**
+ * getKData: 获取k线数据
+ * 返回数据格式 - 日期 ，开盘价， 最高价， 收盘价， 最低价， 成交量， 价格变动 ，涨跌幅，5日均价，10日均价，20日均价，5日均量，10日均量，20日均量，换手率
+ *
+ * @param {Object} options = {} - options
+ * @param {String} options.code - 股票代码, 例如： '600848'
+ * @param {String} options.start - 开始日期 format：YYYY-MM-DD 为空时取到API所提供的最早日期数据
+ * @param {String} options.end - 结束日期 format：YYYY-MM-DD 为空时取到最近一个交易日数据
+ * @param {String} options.ktype - 数据类型，day=日k线 week=周 month=月 5=5分钟 15=15分钟 30=30分钟 60=60分钟，默认为day
+ * @param {String} options.autype - 复权类型，默认前复权, fq=前复权, last=不复权
+ * @param {Bool}   options.index - 是否为指数，默认为false
+ * @param cb
+ * @return {undefined}
+ */
+export const getKData = (query = {}) => {
+  const defaults = {
+    code: null,
+    start: null,
+    end: null,
+    ktype: 'day',
+    autype: 'fq',
+    index : false,
+  };
+
+  const options = Object.assign({}, defaults, query);
+  if (options.ktype === 'day' || 
+      options.ktype === 'week' ||
+      options.ktype === 'month') {
+     return _getKDataLong(options);
+  } 
+
+  return _getKDataShort(options);
+};
+
 
 /**
  * getTick - 获取历史分笔数据

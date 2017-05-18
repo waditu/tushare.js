@@ -19,6 +19,9 @@ export const todayTickUrl = (code, end = '15:00:00') => `http://quotes.money.163
 export const indexUrl = () =>
   'http://hq.sinajs.cn/rn=xppzh&list=sh000001,sh000002,sh000003,sh000008,sh000009,sh000010,sh000011,sh000012,sh000016,sh000017,sh000300,sz399001,sz399002,sz399003,sz399004,sz399005,sz399006,sz399100,sz399101,sz399106,sz399107,sz399108,sz399333,sz399606';
 
+export const klineTTUrl = (httptype,domain,kline,fq,symbol,ktype,start,end,fq2,randomcode) =>
+      `${httptype}web.ifzq.${domain}/appstock/app/${kline}kline/get?_var=kline_day${fq}&param=${symbol},${ktype},${start},${end},640,${fq2}&r=0.${randomcode}`
+
 export const sinaDDUrl = (symbol, volume, date) =>
   `http://vip.stock.finance.sina.com.cn/quotes_service/view/cn_bill_download.php?symbol=${symbol}&num=60&page=1&sort=ticktime&asc=0&volume=${volume}&amount=0&type=0&day=${date}`;
 
