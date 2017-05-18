@@ -1,5 +1,7 @@
 import { INDEX_LABELS, INDEX_LIST } from './cons';
 
+const util = require('util');
+
 export function codeToSymbol(code) {
   let symbol = '';
   if (INDEX_LABELS.indexOf(code) >= 0) {
@@ -46,11 +48,19 @@ export function arrayObjectMapping(fields, items) {
   });
 }
 
-export function random(num) {
-  let upper;
-  let lower;
-  lower = 10 ** (num -1);
-  upper = 10 ** num - 1;
+const _pow = (base, exp) => {
+  let _b = base;
+  for (let _i = 0; _i < exp; _i += 1) {
+    _b *= base;
+  }
+  return _b;
+};
+
+export function randomString(num) {
+  const lower = _pow(10, (num - 1));
+  const upper = _pow(10, num) - 1;
+  const rnum = lower + (Math.random() * (upper - lower));
+  return util.format('%s', rnum);
 }
 
 export const checkStatus = response => {

@@ -9,10 +9,10 @@ import {
 } from './urls';
 
 import * as cons from './cons';
-import { codeToSymbol, checkStatus, DATE_NOW } from './util';
+import { codeToSymbol, checkStatus, DATE_NOW, randomString } from './util';
 import { charset } from '../utils/charset';
 import '../utils/fetch';
-import { getToday } from '../utils/dateu';
+import { getToday,ttDates } from '../utils/dateu';
 
 /**
  * getHistory: 获取个股历史数据
@@ -50,11 +50,17 @@ export const getHistory = (query = {}) => {
 const _getKDataLong = (options = {}) => {
   let autype = '';
   let kline = '';
-  const fq = '';
+  let fq = '';
   let symbol = '';
-  const url = '';
-  let sdate;
-  let edate;
+  let urls = [];
+  let url = '';
+  let years = [];
+  let curfq = '';
+  let cursdate;
+  let curedate;
+  const sdate = options.start;
+  let edate = options.end;
+  let randomstr ;
 
   if (options.index) {
     if (options.code in cons.INDEX_LIST) {
@@ -66,8 +72,6 @@ const _getKDataLong = (options = {}) => {
     symbol = codeToSymbol(options.code);
   }
 
-  sdate = options.start;
-  edate = options.end;
   if (options.autype !== null && options.autype !== '') {
     autype = options.autype;
   }
@@ -77,26 +81,6 @@ const _getKDataLong = (options = {}) => {
     }
   }
 
-  if (options.ktype in cons.K_LABELS) {
-    if (autype !== '') {
-      fq = autype;
-    }
-    if ((options.code[0] === '1' || 
-        options.code[0] === '5') || options.index) {
-       fq = '';
-    }
-
-    if (autype !== '') {
-      kline = 'fq';
-    }
-
-    if ((sdate === null || sdate === '') &&
-        (edate === null || edate === '')) {
-        url = klineTTUrl('http://','gtimg.cn',kline,fq,symbol,options.ktype,sdate,edate,fq,)
-    }
-
-  }
-
   if (options.autype !== null && options.autype !== '') {
     autype = options.autype;
   }
@@ -104,17 +88,55 @@ const _getKDataLong = (options = {}) => {
     autype = options.autype;
   }
 
+  if (autype !== '') {
+    kline = 'fq';
+  }
 
   if (autype !== '') {
     kline = 'fq';
   }
 
+  if (options.ktype in cons.K_LABELS) {
+    if (autype !== '') {
+      fq = autype;
+    }
+    if ((options.code[0] === '1' ||
+        options.code[0] === '5') || options.index) {
+      fq = '';
+    }
 
-  return fetch(url)
-  .then(checkStatus)
-  .then(res => res.json())
-  .then(json => ({ data: json }))
-  .catch(error => ({ error }));
+  
+    if ((sdate === null || sdate === '') &&
+        (edate === null || edate === '')) {
+        randomstr = randomString(17);
+        url = klineTTUrl('http://','gtimg.cn',kline,fq,symbol,options.ktype,sdate,edate,fq,randomstr);
+        urls.push(url);
+    } else {
+      years = ttDates(sdate,edate);
+      years.forEach(function(elm) {
+        cursdate = util.format('%s-01-01',elm);
+        curedate = util.format('%s-12-31',elm);
+        curfq = util.format('%s%s',fq,elm);
+        randomstr = randomString(17);
+        url = klineTTUrl('http://','gtimg.cn',kline,curfq,symbol,options.ktype,cursdate,curedate,fq,randomstr);
+        urls.push(url);
+      });
+    }
+  }  else if (options.ktype in cons.K_MIN_LABELS) {
+    
+  } else {
+      throw new Error(util.format('unknown ktype %s',option.ktype));
+  }
+
+  urls.forEach(function(elmurl) {
+      fetch(elmurl)
+      .then(checkStatus)
+      .then(res => res.json())
+      .then(json => ({data : json}))
+      .catch(error => ({error}));
+  });
+
+  return;
 };
 
 const _getKDataShort = (options = {}) => {
