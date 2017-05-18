@@ -29,7 +29,8 @@
     "js-base64": "^2.1.9",
     "moment": "^2.17.1",
     "no-fetch": "^1.6.2",
-    "whatwg-fetch": "^2.0.2"
+    "whatwg-fetch": "^2.0.2",
+    "strftime" : "^0.10.0"
   },
   "devDependencies": {
     "ava": "^0.18.1",

@@ -12,6 +12,7 @@ import * as cons from './cons';
 import { codeToSymbol, checkStatus, DATE_NOW } from './util';
 import { charset } from '../utils/charset';
 import '../utils/fetch';
+import { getToday } from '../utils/dateu';
 
 /**
  * getHistory: 获取个股历史数据
@@ -47,32 +48,41 @@ export const getHistory = (query = {}) => {
 };
 
 const _getKDataLong = (options = {}) => {
-  const kline = options.autype;
-  var fqyear = options.autype;
-  var autype = '';
-  var kline = '';
-  var autype = '';
-  const symbol = codeToSymbol(options.code);
-  var fq = '';
-  var symbol = '';
-  if (options.autype !== null &&  options.autype !== '' ) {
-      autype = options.autype;
+  let autype = '';
+  let kline = '';
+  const fq = '';
+  let symbol = '';
+  const url = '';
+  let sdate,
+    edate;
+  if (options.start !== null && options.start !== '') {
+    sdate = options.start;
+    if (options.end === null || options.end === '') {
+      edate = getToday();
+    }
+  }
+
+  if (options.autype !== null && options.autype !== '') {
+    autype = options.autype;
   }
   if (options.autype !== '') {
-      autype = options.autype;
+    autype = options.autype;
   }
 
   if (options.index) {
-      
-  } else {
+    if (options.code in cons.INDEX_LIST) {
+      symbol = cons.INDEX_LIST[options.code];
+    } else {
       symbol = codeToSymbol(options.code);
+    }
+  } else {
+    symbol = codeToSymbol(options.code);
   }
 
   if (autype !== '') {
-      kline = 'fq';
+    kline = 'fq';
   }
 
-  const url = klineTTUrl('http://','gtimg.cn',kline,options.autype,options.code,, symbol);
 
   return fetch(url)
   .then(checkStatus)
@@ -105,15 +115,15 @@ export const getKData = (query = {}) => {
     end: null,
     ktype: 'day',
     autype: 'fq',
-    index : false,
+    index: false,
   };
 
   const options = Object.assign({}, defaults, query);
-  if (options.ktype === 'day' || 
+  if (options.ktype === 'day' ||
       options.ktype === 'week' ||
       options.ktype === 'month') {
-     return _getKDataLong(options);
-  } 
+    return _getKDataLong(options);
+  }
 
   return _getKDataShort(options);
 };
