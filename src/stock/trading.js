@@ -53,21 +53,8 @@ const _getKDataLong = (options = {}) => {
   const fq = '';
   let symbol = '';
   const url = '';
-  let sdate,
-    edate;
-  if (options.start !== null && options.start !== '') {
-    sdate = options.start;
-    if (options.end === null || options.end === '') {
-      edate = getToday();
-    }
-  }
-
-  if (options.autype !== null && options.autype !== '') {
-    autype = options.autype;
-  }
-  if (options.autype !== '') {
-    autype = options.autype;
-  }
+  let sdate;
+  let edate;
 
   if (options.index) {
     if (options.code in cons.INDEX_LIST) {
@@ -78,6 +65,45 @@ const _getKDataLong = (options = {}) => {
   } else {
     symbol = codeToSymbol(options.code);
   }
+
+  sdate = options.start;
+  edate = options.end;
+  if (options.autype !== null && options.autype !== '') {
+    autype = options.autype;
+  }
+  if (options.start !== null && options.start !== '') {
+    if (options.end === null || options.end === '') {
+      edate = getToday();
+    }
+  }
+
+  if (options.ktype in cons.K_LABELS) {
+    if (autype !== '') {
+      fq = autype;
+    }
+    if ((options.code[0] === '1' || 
+        options.code[0] === '5') || options.index) {
+       fq = '';
+    }
+
+    if (autype !== '') {
+      kline = 'fq';
+    }
+
+    if ((sdate === null || sdate === '') &&
+        (edate === null || edate === '')) {
+        url = klineTTUrl('http://','gtimg.cn',kline,fq,symbol,options.ktype,sdate,edate,fq,)
+    }
+
+  }
+
+  if (options.autype !== null && options.autype !== '') {
+    autype = options.autype;
+  }
+  if (options.autype !== '') {
+    autype = options.autype;
+  }
+
 
   if (autype !== '') {
     kline = 'fq';

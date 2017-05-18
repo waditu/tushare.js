@@ -46,6 +46,13 @@ export function arrayObjectMapping(fields, items) {
   });
 }
 
+export function random(num) {
+  let upper;
+  let lower;
+  lower = 10 ** (num -1);
+  upper = 10 ** num - 1;
+}
+
 export const checkStatus = response => {
   if (response.status >= 200 && response.status < 300) {
     return response;
