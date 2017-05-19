@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import {
   priceUrl,
   tickUrl,
@@ -7,6 +8,7 @@ import {
   indexUrl,
   sinaDDUrl,
   klineTTUrl,
+  klineTTMinUrl,
 } from './urls';
 
 import * as cons from './cons';
@@ -55,6 +57,7 @@ const _storeListData = (res, listdata, ktype, code, callback = null) => {
     const sarr = s.split('=');
     let sdict;
     let l;
+    console.log('s %s', s);
     if (sarr.length > 1) {
       s = sarr[1];
       s = s.replace(/,\{"nd.*?\}/, '');
@@ -76,6 +79,24 @@ const _getTimeTick = ts => {
     retval += parseInt(sarr[1], 10) * 100;
     retval += parseInt(sarr[2], 10);
   }
+  return retval;
+};
+
+const _getTimeTickExpand = ts => {
+  const sarr = ts.split('-');
+  let retval = 0;
+  if (sarr.length >= 3) {
+    retval += parseInt(sarr[0], 10) * 100 * 100;
+    retval += parseInt(sarr[1], 10) * 100;
+    retval += parseInt(sarr[2], 10);
+    retval *= 10000;
+  }
+  return retval;
+};
+
+const _getTimeTickShort = ts => {
+  let retval = 0;
+  retval += parseInt(ts, 10);
   return retval;
 };
 
@@ -196,6 +217,84 @@ const _getKDataLong = (options = {}) => {
   });
 };
 
+const _getKDataShort = (options = {}) => {
+  let symbol = '';
+  const urls = [];
+  let url = '';
+  const sdate = options.start;
+  let edate = options.end;
+  let randomstr;
+  let handledurls = [];
+  let handleddata = null;
+  let ktype = '';
+
+  if (options.cb === undefined || options.cb === null) {
+    throw new Error('not define cb in callback');
+  }
+
+  if (options.index) {
+    if (cons.INDEX_LIST.includes(options.code)) {
+      symbol = cons.INDEX_LIST[options.code];
+    } else {
+      symbol = codeToSymbol(options.code);
+    }
+  } else {
+    symbol = codeToSymbol(options.code);
+  }
+
+  if (options.start !== null && options.start !== '') {
+    if (options.end === null || options.end === '') {
+      edate = getToday();
+    }
+  }
+
+  if (cons.K_MIN_LABELS.includes(options.ktype)) {
+    randomstr = randomString(16);
+    url = klineTTMinUrl('http://', 'gtimg.cn', symbol, options.ktype, randomstr);
+    urls.push(url);
+  } else {
+    throw new Error(util.format('unknown ktype %s', options.ktype));
+  }
+
+  handleddata = [];
+  handledurls = [];
+  ktype = util.format('m%s', options.ktype);
+  urls.forEach(elmurl => {
+    console.log('elmurl %s', elmurl);
+    fetch(elmurl)
+      .then(checkStatus)
+      .then(res => {
+        handledurls.push(elmurl);
+        console.log('call length');
+        if (handledurls.length === urls.length) {
+          _storeListData(res, handleddata, ktype, symbol, setdata => {
+            if (options.cb !== null) {
+              const kdata = [];
+              const stick = _getTimeTickExpand(sdate);
+              const etick = _getTimeTickExpand(edate);
+
+
+              setdata.forEach(curdata => {
+                const curtick = _getTimeTickShort(curdata[0]);
+                if (curtick >= stick && curtick <= etick) {
+                  kdata.push(curdata);
+                }
+              });
+
+              options.cb(kdata, options.args);
+            }
+          });
+        } else {
+          _storeListData(res, handleddata, ktype, symbol);
+        }
+      })
+      .catch(error => {
+        throw new Error(util.format('error for %s %s', elmurl, error));
+      });
+  });
+};
+
+
 /**
  * getKData: 获取k线数据
  * 返回数据格式 - 日期 ，开盘价， 最高价， 收盘价， 最低价， 成交量， 价格变动 ，涨跌幅，5日均价，10日均价，20日均价，5日均量，10日均量，20日均量，换手率
@@ -228,6 +327,13 @@ export const getKData = (query = {}) => {
       options.ktype === 'week' ||
       options.ktype === 'month') {
     return _getKDataLong(options);
+  }
+
+  if (options.ktype === '30' ||
+      options.ktype === '5' ||
+      options.ktype === '1' ||
+      options.ktype === '60') {
+    return _getKDataShort(options);
   }
 
   throw new Error(util.format('not supported ktype %s', options.ktype));

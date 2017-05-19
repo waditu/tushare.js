@@ -22,6 +22,9 @@ export const indexUrl = () =>
 export const klineTTUrl = (httptype,domain,kline,fq,symbol,ktype,start,end,fq2,randomcode) =>
       `${httptype}web.ifzq.${domain}/appstock/app/${kline}kline/get?_var=kline_day${fq}&param=${symbol},${ktype},${start},${end},640,${fq2}&r=0.${randomcode}`
 
+export const klineTTMinUrl = (httptype,domain,symbol,ktype,randomcode) => 
+      `${httptype}ifzq.${domain}/appstock/app/kline/mkline?param=${symbol},m${ktype},,640&_var=m${ktype}_today&r=0.${randomcode}`
+
 export const sinaDDUrl = (symbol, volume, date) =>
   `http://vip.stock.finance.sina.com.cn/quotes_service/view/cn_bill_download.php?symbol=${symbol}&num=60&page=1&sort=ticktime&asc=0&volume=${volume}&amount=0&type=0&day=${date}`;
 

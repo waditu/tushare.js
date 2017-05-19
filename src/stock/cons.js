@@ -9,6 +9,7 @@ export const K_TYPE = {
 
 export const INDEX_LABELS = ['sh', 'sz', 'hs300', 'sz50', 'cyb', 'zxb', 'zx300', 'zh500'];
 export const K_LABELS = ['day', 'month', 'week'];
+export const K_MIN_LABELS = ['1', '5', '15', '30', '30'];
 
 export const INDEX_LIST = {
   sh: 'sh000001',
