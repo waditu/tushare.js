@@ -6,13 +6,16 @@ import {
   todayTickUrl,
   indexUrl,
   sinaDDUrl,
+  klineTTUrl,
 } from './urls';
 
 import * as cons from './cons';
 import { codeToSymbol, checkStatus, DATE_NOW, randomString } from './util';
 import { charset } from '../utils/charset';
 import '../utils/fetch';
-import { getToday,ttDates } from '../utils/dateu';
+import { getToday, ttDates } from '../utils/dateu';
+
+const util = require('util');
 
 /**
  * getHistory: 获取个股历史数据
@@ -24,7 +27,6 @@ import { getToday,ttDates } from '../utils/dateu';
  * @param {String} options.end - 结束日期 format：YYYY-MM-DD 为空时取到最近一个交易日数据
  * @param {String} options.ktype - 数据类型，day=日k线 week=周 month=月 5=5分钟 15=15分钟 30=30分钟 60=60分钟，默认为day
  * @param {String} options.autype - 复权类型，默认前复权, fq=前复权, last=不复权
- * @param cb
  * @return {undefined}
  */
 export const getHistory = (query = {}) => {
@@ -52,7 +54,7 @@ const _getKDataLong = (options = {}) => {
   let kline = '';
   let fq = '';
   let symbol = '';
-  let urls = [];
+  const urls = [];
   let url = '';
   let years = [];
   let curfq = '';
@@ -60,7 +62,13 @@ const _getKDataLong = (options = {}) => {
   let curedate;
   const sdate = options.start;
   let edate = options.end;
-  let randomstr ;
+  let randomstr;
+  let handledurls = [];
+  let handleddata = null;
+
+  if (options.cb === undefined || options.cb === null) {
+    throw new Error('not define cb in callback');
+  }
 
   if (options.index) {
     if (options.code in cons.INDEX_LIST) {
@@ -96,7 +104,7 @@ const _getKDataLong = (options = {}) => {
     kline = 'fq';
   }
 
-  if (options.ktype in cons.K_LABELS) {
+  if (cons.K_LABELS.includes(options.ktype)) {
     if (autype !== '') {
       fq = autype;
     }
@@ -105,43 +113,58 @@ const _getKDataLong = (options = {}) => {
       fq = '';
     }
 
-  
+
     if ((sdate === null || sdate === '') &&
         (edate === null || edate === '')) {
-        randomstr = randomString(17);
-        url = klineTTUrl('http://','gtimg.cn',kline,fq,symbol,options.ktype,sdate,edate,fq,randomstr);
-        urls.push(url);
+      randomstr = randomString(17);
+      url = klineTTUrl('http://', 'gtimg.cn', kline, fq, symbol, options.ktype, sdate, edate, fq, randomstr);
+      /* eslint-disable no-console */
+      console.log('url %s', url);
+      /* eslint-enable no-console */
+      urls.push(url);
     } else {
-      years = ttDates(sdate,edate);
-      years.forEach(function(elm) {
-        cursdate = util.format('%s-01-01',elm);
-        curedate = util.format('%s-12-31',elm);
-        curfq = util.format('%s%s',fq,elm);
+      years = ttDates(sdate, edate);
+      years.forEach(elm => {
+        cursdate = util.format('%s-01-01', elm);
+        curedate = util.format('%s-12-31', elm);
+        curfq = util.format('%s%s', fq, elm);
         randomstr = randomString(17);
-        url = klineTTUrl('http://','gtimg.cn',kline,curfq,symbol,options.ktype,cursdate,curedate,fq,randomstr);
+        url = klineTTUrl('http://', 'gtimg.cn', kline, curfq, symbol, options.ktype, cursdate, curedate, fq, randomstr);
+        /* eslint-disable no-console */
+        console.log('url %s', url);
+        /* eslint-enable no-console */
         urls.push(url);
       });
     }
-  }  else if (options.ktype in cons.K_MIN_LABELS) {
-    
   } else {
-      throw new Error(util.format('unknown ktype %s',option.ktype));
+    throw new Error(util.format('unknown ktype %s', options.ktype));
   }
 
-  urls.forEach(function(elmurl) {
-      fetch(elmurl)
+  handleddata = null;
+  handledurls = [];
+  urls.forEach(elmurl => {
+    fetch(elmurl)
       .then(checkStatus)
-      .then(res => res.json())
-      .then(json => ({data : json}))
-      .catch(error => ({error}));
+      .then(res => {
+        handledurls.push(elmurl);
+        if (handleddata === null) {
+          handleddata = res.json();
+        } else {
+          handleddata.push(...res.json());
+        }
+        if (handledurls.length === urls.length) {
+          /* all is */
+          options.cb(handleddata);
+        }
+      })
+      .catch(error => {
+        /* eslint-disable no-console */
+        console.error('error for %s %s', elmurl, error);
+        /* eslint-enable no-console */
+      });
   });
-
-  return;
 };
 
-const _getKDataShort = (options = {}) => {
-
-};
 /**
  * getKData: 获取k线数据
  * 返回数据格式 - 日期 ，开盘价， 最高价， 收盘价， 最低价， 成交量， 价格变动 ，涨跌幅，5日均价，10日均价，20日均价，5日均量，10日均量，20日均量，换手率
@@ -153,6 +176,7 @@ const _getKDataShort = (options = {}) => {
  * @param {String} options.ktype - 数据类型，day=日k线 week=周 month=月 5=5分钟 15=15分钟 30=30分钟 60=60分钟，默认为day
  * @param {String} options.autype - 复权类型，默认前复权, fq=前复权, last=不复权
  * @param {Bool}   options.index - 是否为指数，默认为false
+ * @param {function} options.cb  - 回调函数，得到全部数据之后的处理函数
  * @param cb
  * @return {undefined}
  */
@@ -173,7 +197,7 @@ export const getKData = (query = {}) => {
     return _getKDataLong(options);
   }
 
-  return _getKDataShort(options);
+  throw new Error(util.format('not supported ktype %s', options.ktype));
 };
 
 
