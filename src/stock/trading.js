@@ -171,18 +171,20 @@ const _getKDataLong = (options = {}) => {
         handledurls.push(elmurl);
         if (handledurls.length === urls.length) {
           _storeListData(res, handleddata, options.ktype, symbol, setdata => {
-            const kdata = [];
-            const stick = _getTimeTick(sdate);
-            const etick = _getTimeTick(edate);
+            if (options.cb !== null) {
+              const kdata = [];
+              const stick = _getTimeTick(sdate);
+              const etick = _getTimeTick(edate);
 
-            setdata.forEach(curdata => {
-              const curtick = _getTimeTick(curdata[0]);
-              if (curtick >= stick && curtick <= etick) {
-                kdata.push(curdata);
-              }
-            });
+              setdata.forEach(curdata => {
+                const curtick = _getTimeTick(curdata[0]);
+                if (curtick >= stick && curtick <= etick) {
+                  kdata.push(curdata);
+                }
+              });
 
-            options.cb(kdata);
+              options.cb(kdata, options.args);
+            }
           });
         } else {
           _storeListData(res, handleddata, options.ktype, symbol);
@@ -206,6 +208,7 @@ const _getKDataLong = (options = {}) => {
  * @param {String} options.autype - 复权类型，默认前复权, fq=前复权, last=不复权
  * @param {Bool}   options.index - 是否为指数，默认为false
  * @param {function} options.cb  - 回调函数，得到全部数据之后的处理函数
+ * @param {object} options.args  - 回调参数，是回调函数的输入参数
  * @param cb
  * @return {undefined}
  */
@@ -217,6 +220,7 @@ export const getKData = (query = {}) => {
     ktype: 'day',
     autype: 'fq',
     index: false,
+    args: null,
   };
 
   const options = Object.assign({}, defaults, query);
