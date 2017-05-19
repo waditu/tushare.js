@@ -20,6 +20,8 @@ export function ttDates(sdate, edate) {
   }
   if (eyear !== syear) {
     retyears.push(eyear);
+  } else if (syear === eyear) {
+    retyears.push(syear);
   }
   return retyears;
 }

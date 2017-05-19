@@ -72,3 +72,9 @@ export const checkStatus = response => {
   error.response = response;
   throw error;
 };
+
+
+export const getIfzqResult = body => {
+   let s = body.toString('ascii');
+   
+};

@@ -49,6 +49,37 @@ export const getHistory = (query = {}) => {
   .catch(error => ({ error }));
 };
 
+const _storeListData = (res, listdata, ktype, code, callback = null) => {
+  res.buffer().then(buf => {
+    let s = buf.toString('ascii');
+    const sarr = s.split('=');
+    let sdict;
+    let l;
+    if (sarr.length > 1) {
+      s = sarr[1];
+      s = s.replace(/,\{"nd.*?\}/, '');
+      sdict = JSON.parse(s);
+      l = sdict['data'][code][ktype];
+      listdata.push(...l);
+      if (callback !== null) {
+        callback(listdata);
+      }
+    }
+  });
+};
+
+const _getTimeTick = ts => {
+  const sarr = ts.split('-');
+  let retval = 0;
+  if (sarr.length >= 3) {
+    retval += parseInt(sarr[0], 10) * 100 * 100;
+    retval += parseInt(sarr[1], 10) * 100;
+    retval += parseInt(sarr[2], 10);
+  }
+  return retval;
+};
+
+
 const _getKDataLong = (options = {}) => {
   let autype = '';
   let kline = '';
@@ -100,10 +131,6 @@ const _getKDataLong = (options = {}) => {
     kline = 'fq';
   }
 
-  if (autype !== '') {
-    kline = 'fq';
-  }
-
   if (cons.K_LABELS.includes(options.ktype)) {
     if (autype !== '') {
       fq = autype;
@@ -118,9 +145,6 @@ const _getKDataLong = (options = {}) => {
         (edate === null || edate === '')) {
       randomstr = randomString(17);
       url = klineTTUrl('http://', 'gtimg.cn', kline, fq, symbol, options.ktype, sdate, edate, fq, randomstr);
-      /* eslint-disable no-console */
-      console.log('url %s', url);
-      /* eslint-enable no-console */
       urls.push(url);
     } else {
       years = ttDates(sdate, edate);
@@ -128,11 +152,9 @@ const _getKDataLong = (options = {}) => {
         cursdate = util.format('%s-01-01', elm);
         curedate = util.format('%s-12-31', elm);
         curfq = util.format('%s%s', fq, elm);
+
         randomstr = randomString(17);
         url = klineTTUrl('http://', 'gtimg.cn', kline, curfq, symbol, options.ktype, cursdate, curedate, fq, randomstr);
-        /* eslint-disable no-console */
-        console.log('url %s', url);
-        /* eslint-enable no-console */
         urls.push(url);
       });
     }
@@ -140,27 +162,34 @@ const _getKDataLong = (options = {}) => {
     throw new Error(util.format('unknown ktype %s', options.ktype));
   }
 
-  handleddata = null;
+  handleddata = [];
   handledurls = [];
   urls.forEach(elmurl => {
     fetch(elmurl)
       .then(checkStatus)
       .then(res => {
         handledurls.push(elmurl);
-        if (handleddata === null) {
-          handleddata = res.json();
-        } else {
-          handleddata.push(...res.json());
-        }
         if (handledurls.length === urls.length) {
-          /* all is */
-          options.cb(handleddata);
+          _storeListData(res, handleddata, options.ktype, symbol, setdata => {
+            const kdata = [];
+            const stick = _getTimeTick(sdate);
+            const etick = _getTimeTick(edate);
+
+            setdata.forEach(curdata => {
+              const curtick = _getTimeTick(curdata[0]);
+              if (curtick >= stick && curtick <= etick) {
+                kdata.push(curdata);
+              }
+            });
+
+            options.cb(kdata);
+          });
+        } else {
+          _storeListData(res, handleddata, options.ktype, symbol);
         }
       })
       .catch(error => {
-        /* eslint-disable no-console */
-        console.error('error for %s %s', elmurl, error);
-        /* eslint-enable no-console */
+        throw new Error(util.format('error for %s %s', elmurl, error));
       });
   });
 };
