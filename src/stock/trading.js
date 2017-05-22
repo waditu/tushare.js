@@ -252,7 +252,6 @@ const _getKDataShort = (options = {}) => {
   handledurls = [];
   ktype = util.format('m%s', options.ktype);
   urls.forEach(elmurl => {
-    console.log('elmurl %s', elmurl);
     fetch(elmurl)
       .then(checkStatus)
       .then(res => {

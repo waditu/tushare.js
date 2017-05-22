@@ -1,12 +1,11 @@
 /* eslint no-unused-vars: ["error", {"args" : "none"}]*/
-/* eslint-disable no-console */
 import test from 'ava';
 import { stock } from '../src';
 
 const strftime = require('strftime');
 const util = require('util');
 
-test('Get Special case for long time ago', t => {
+test.cb('Get Special case for long time ago', t => {
   t.plan(1);
   const opt = {};
   opt.code = '000002';
@@ -14,6 +13,7 @@ test('Get Special case for long time ago', t => {
   opt.end = '2002-04-06';
   const callback = function cb(data, args) {
     t.truthy(data.length >= 20, 'get data length 20');
+    t.end();
   };
   opt.cb = callback;
   opt.args = null;
@@ -39,29 +39,30 @@ const _getTimeTickShort = ts => {
 };
 
 
-test('Get short time index', t => {
-  t.plan(21);
+test.cb('Get short time index', t => {
   const opt = {};
+  const etime = new Date();
+  const stime = new Date(etime.getTime() - (24 * 365 * 3600 * 1000));
+  const sdate = strftime('%Y-%d-%m', stime);
+  const edate = strftime('%Y-%d-%m', etime);
   opt.code = '000001';
   opt.index = true;
   opt.ktype = '5';
+  opt.start = sdate;
+  opt.end = edate;
   const callback = function cb(data, args) {
-    console.log('data length %s', data.length);
-    const etime = new Date();
-    const stime = new Date(etime.getTime() - (24 * 365 * 3600 * 1000));
-    const sdate = strftime('%Y-%d-%m', stime);
-    const edate = strftime('%Y-%d-%m', etime);
     let curtick;
     const stick = _getTimeTick(sdate);
     const etick = _getTimeTick(edate);
     let idx = 0;
     t.truthy(data.length >= 20, 'get data for index');
-    while (idx < 20) {
-        let d = data[idx];
-        curtick = _getTimeTickShort(d[0]);
-        t.truthy(curtick >= stick && curtick <= etick, util.format('%s >= %s && %s <= %s', curtick, stick, curtick, etick));
-        idx += 1;
+    while (idx < data.length) {
+      const d = data[idx];
+      curtick = _getTimeTickShort(d[0]);
+      t.truthy(curtick >= stick && curtick <= etick, util.format('%s >= %s && %s <= %s', curtick, stick, curtick, etick));
+      idx += 1;
     }
+    t.end();
   };
   opt.cb = callback;
   opt.args = null;
