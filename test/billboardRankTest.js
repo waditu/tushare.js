@@ -8,6 +8,7 @@ test('Get Long Period Rank Data by month', t => {
     pageSize: 100,
   };
   return stock.longPeriodRank(options).then(({ data }) => {
+    console.error('length %s', data.items.length);
     t.truthy(data.items.length === 100, 'It should return 100 records');
   });
 });
@@ -19,6 +20,7 @@ test('Get Long Period Rank Data by month', t => {
     pageSize: 100,
   };
   return stock.longPeriodRank(options).then(({ data }) => {
+    console.error('month length %s', data.items.length);
     t.truthy(data.items.length === 100, 'It should return 100 records');
   });
 });

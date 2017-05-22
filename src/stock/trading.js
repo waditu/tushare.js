@@ -57,13 +57,16 @@ const _storeListData = (res, listdata, ktype, code, callback = null) => {
     const sarr = s.split('=');
     let sdict;
     let l;
-    console.log('s %s', s);
     if (sarr.length > 1) {
       s = sarr[1];
       s = s.replace(/,\{"nd.*?\}/, '');
       sdict = JSON.parse(s);
-      l = sdict['data'][code][ktype];
-      listdata.push(...l);
+      if ( 'data' in sdict && code in sdict['data'] && ktype in sdict['data'][code]) {
+        l = sdict['data'][code][ktype];
+        l.forEach(function(c){
+          listdata.push(c);
+        });
+      }
       if (callback !== null) {
         callback(listdata);
       }
@@ -72,17 +75,6 @@ const _storeListData = (res, listdata, ktype, code, callback = null) => {
 };
 
 const _getTimeTick = ts => {
-  const sarr = ts.split('-');
-  let retval = 0;
-  if (sarr.length >= 3) {
-    retval += parseInt(sarr[0], 10) * 100 * 100;
-    retval += parseInt(sarr[1], 10) * 100;
-    retval += parseInt(sarr[2], 10);
-  }
-  return retval;
-};
-
-const _getTimeTickExpand = ts => {
   const sarr = ts.split('-');
   let retval = 0;
   if (sarr.length >= 3) {
@@ -123,7 +115,7 @@ const _getKDataLong = (options = {}) => {
   }
 
   if (options.index) {
-    if (options.code in cons.INDEX_LIST) {
+    if ( options.code in cons.INDEX_LIST) {
       symbol = cons.INDEX_LIST[options.code];
     } else {
       symbol = codeToSymbol(options.code);
@@ -233,7 +225,7 @@ const _getKDataShort = (options = {}) => {
   }
 
   if (options.index) {
-    if (cons.INDEX_LIST.includes(options.code)) {
+    if (options.code in cons.INDEX_LIST) {
       symbol = cons.INDEX_LIST[options.code];
     } else {
       symbol = codeToSymbol(options.code);
@@ -265,13 +257,12 @@ const _getKDataShort = (options = {}) => {
       .then(checkStatus)
       .then(res => {
         handledurls.push(elmurl);
-        console.log('call length');
         if (handledurls.length === urls.length) {
           _storeListData(res, handleddata, ktype, symbol, setdata => {
             if (options.cb !== null) {
               const kdata = [];
-              const stick = _getTimeTickExpand(sdate);
-              const etick = _getTimeTickExpand(edate);
+              const stick = _getTimeTick(sdate);
+              const etick = _getTimeTick(edate);
 
 
               setdata.forEach(curdata => {
@@ -325,7 +316,7 @@ export const getKData = (query = {}) => {
   const options = Object.assign({}, defaults, query);
   if (options.ktype === 'day' ||
       options.ktype === 'week' ||
-      options.ktype === 'month') {
+      options.ktype === 'month' || options.ktype == 'quater') {
     return _getKDataLong(options);
   }
 
