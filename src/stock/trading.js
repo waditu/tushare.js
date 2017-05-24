@@ -61,9 +61,9 @@ const _storeListData = (res, listdata, ktype, code, callback = null) => {
       s = sarr[1];
       s = s.replace(/,\{"nd.*?\}/, '');
       sdict = JSON.parse(s);
-      if ( 'data' in sdict && code in sdict['data'] && ktype in sdict['data'][code]) {
+      if ('data' in sdict && code in sdict['data'] && ktype in sdict['data'][code]) {
         l = sdict['data'][code][ktype];
-        l.forEach(function(c){
+        l.forEach(c => {
           listdata.push(c);
         });
       }
@@ -92,6 +92,38 @@ const _getTimeTickShort = ts => {
   return retval;
 };
 
+const _getSymbol = function getsym(options) {
+  let symbol = '';
+  if (options.index) {
+    if (options.code in cons.INDEX_LIST) {
+      symbol = cons.INDEX_LIST[options.code];
+    } else {
+      symbol = codeToSymbol(options.code);
+    }
+  } else {
+    symbol = codeToSymbol(options.code);
+  }
+  return symbol;
+};
+
+const _getAutype = function getautype(options) {
+  let autype = '';
+  if (options.autype !== null && options.autype !== '') {
+    autype = options.autype;
+  }
+  return autype;
+};
+
+const _getEDate = function getedate(options) {
+  let edate = options.end;
+  if (options.start !== null && options.start !== '') {
+    if (options.end === null || options.end === '') {
+      edate = getToday();
+    }
+  }
+  return edate;
+};
+
 
 const _getKDataLong = (options = {}) => {
   let autype = '';
@@ -110,35 +142,9 @@ const _getKDataLong = (options = {}) => {
   let handledurls = [];
   let handleddata = null;
 
-  if (options.cb === undefined || options.cb === null) {
-    throw new Error('not define cb in callback');
-  }
-
-  if (options.index) {
-    if ( options.code in cons.INDEX_LIST) {
-      symbol = cons.INDEX_LIST[options.code];
-    } else {
-      symbol = codeToSymbol(options.code);
-    }
-  } else {
-    symbol = codeToSymbol(options.code);
-  }
-
-  if (options.autype !== null && options.autype !== '') {
-    autype = options.autype;
-  }
-  if (options.start !== null && options.start !== '') {
-    if (options.end === null || options.end === '') {
-      edate = getToday();
-    }
-  }
-
-  if (options.autype !== null && options.autype !== '') {
-    autype = options.autype;
-  }
-  if (options.autype !== '') {
-    autype = options.autype;
-  }
+  symbol = _getSymbol(options);
+  autype = _getAutype(options);
+  edate = _getEDate(options);
 
   if (autype !== '') {
     kline = 'fq';
@@ -220,25 +226,10 @@ const _getKDataShort = (options = {}) => {
   let handleddata = null;
   let ktype = '';
 
-  if (options.cb === undefined || options.cb === null) {
-    throw new Error('not define cb in callback');
-  }
 
-  if (options.index) {
-    if (options.code in cons.INDEX_LIST) {
-      symbol = cons.INDEX_LIST[options.code];
-    } else {
-      symbol = codeToSymbol(options.code);
-    }
-  } else {
-    symbol = codeToSymbol(options.code);
-  }
+  symbol = _getSymbol(options);
 
-  if (options.start !== null && options.start !== '') {
-    if (options.end === null || options.end === '') {
-      edate = getToday();
-    }
-  }
+  edate = _getEDate(options);
 
   if (cons.K_MIN_LABELS.includes(options.ktype)) {
     randomstr = randomString(16);
@@ -312,7 +303,13 @@ export const getKData = (query = {}) => {
     args: null,
   };
 
+
   const options = Object.assign({}, defaults, query);
+
+  if (options.cb === undefined || options.cb === null) {
+    throw new Error('not define cb in callback');
+  }
+
   if (cons.K_LABELS.includes(options.ktype)) {
     return _getKDataLong(options);
   }
