@@ -313,16 +313,11 @@ export const getKData = (query = {}) => {
   };
 
   const options = Object.assign({}, defaults, query);
-  if (options.ktype === 'day' ||
-      options.ktype === 'week' ||
-      options.ktype === 'month' || options.ktype == 'quater') {
+  if (cons.K_LABELS.includes(options.ktype)) {
     return _getKDataLong(options);
   }
 
-  if (options.ktype === '30' ||
-      options.ktype === '5' ||
-      options.ktype === '1' ||
-      options.ktype === '60') {
+  if (cons.K_MIN_LABELS.includes(options.ktype)) {
     return _getKDataShort(options);
   }
 
