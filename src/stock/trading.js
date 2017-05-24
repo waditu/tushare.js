@@ -236,15 +236,15 @@ const _getKDataLong = (options = {}) => {
 
   handleddata = [];
   handledurls = [];
-  urls.forEach(elmurl => {
-    fetch(elmurl)
-      .then(checkStatus)
-      .then(charset('ascii'))
-      .then(dictdata => {
-        handledurls.push(elmurl);
-        if (handledurls.length === urls.length) {
-          _storeListData(dictdata, handleddata, options.ktype, symbol, setdata => {
-            if (options.cb !== null) {
+  return new Promise((resolve, reject) => {
+    urls.forEach(elmurl => {
+      fetch(elmurl)
+        .then(checkStatus)
+        .then(charset('ascii'))
+        .then(dictdata => {
+          handledurls.push(elmurl);
+          if (handledurls.length === urls.length) {
+            _storeListData(dictdata, handleddata, options.ktype, symbol, setdata => {
               const kdata = [];
               const stick = _getTimeTick(sdate);
               const etick = _getTimeTick(edate);
@@ -255,16 +255,16 @@ const _getKDataLong = (options = {}) => {
                   kdata.push(curdata);
                 }
               });
-              options.cb(kdata, options.args);
-            }
-          });
-        } else {
-          _storeListData(dictdata, handleddata, options.ktype, symbol);
-        }
-      })
-      .catch(error => {
-        throw new Error(util.format('error for %s %s', elmurl, error));
-      });
+              resolve(kdata);
+            });
+          } else {
+            _storeListData(dictdata, handleddata, options.ktype, symbol);
+          }
+        })
+        .catch(err => {
+          reject(err);
+        });
+    });
   });
 };
 
@@ -288,30 +288,29 @@ const _getKDataShort = (options = {}) => {
 
   handleddata = [];
   ktype = util.format('m%s', options.ktype);
-  fetch(url)
-  .then(checkStatus)
+  return new Promise((resolve, reject) => {
+    fetch(url)
+      .then(checkStatus)
       .then(charset('ascii'))
       .then(dictdata => {
         _storeListData(dictdata, handleddata, ktype, symbol, setdata => {
-          if (options.cb !== null) {
-            const kdata = [];
-            const stick = _getTimeTick(sdate);
-            const etick = _getTimeTick(edate);
+          const kdata = [];
+          const stick = _getTimeTick(sdate);
+          const etick = _getTimeTick(edate);
 
-            setdata.forEach(curdata => {
-              const curtick = _getTimeTick(curdata[0]);
-              if (curtick >= stick && curtick <= etick) {
-                kdata.push(curdata);
-              }
-            });
-
-            options.cb(kdata, options.args);
-          }
+          setdata.forEach(curdata => {
+            const curtick = _getTimeTick(curdata[0]);
+            if (curtick >= stick && curtick <= etick) {
+              kdata.push(curdata);
+            }
+          });
+          resolve(kdata);
         });
       })
-      .catch(error => {
-        throw new Error(util.format('error for %s %s', url, error));
+      .catch(err => {
+        reject(err);
       });
+  });
 };
 
 
@@ -326,10 +325,7 @@ const _getKDataShort = (options = {}) => {
  * @param {String} options.ktype - 数据类型，day=日k线 week=周 month=月 5=5分钟 15=15分钟 30=30分钟 60=60分钟，默认为day
  * @param {String} options.autype - 复权类型，默认前复权, fq=前复权, last=不复权
  * @param {Bool}   options.index - 是否为指数，默认为false
- * @param {function} options.cb  - 回调函数，得到全部数据之后的处理函数
- * @param {object} options.args  - 回调参数，是回调函数的输入参数
- * @param cb
- * @return {undefined}
+ * @return {Promise object}      Promise Object 可以调用 then catch函数
  */
 export const getKData = (query = {}) => {
   const defaults = {
@@ -339,15 +335,11 @@ export const getKData = (query = {}) => {
     ktype: 'day',
     autype: 'fq',
     index: false,
-    args: null,
   };
 
 
   const options = Object.assign({}, defaults, query);
 
-  if (options.cb === undefined || options.cb === null) {
-    throw new Error('not define cb in callback');
-  }
 
   if (cons.K_LABELS.includes(options.ktype)) {
     return _getKDataLong(options);

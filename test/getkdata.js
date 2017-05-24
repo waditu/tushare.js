@@ -11,13 +11,15 @@ test.cb('Get Special case for long time ago', t => {
   opt.code = '000002';
   opt.start = '2002-01-01';
   opt.end = '2002-04-06';
-  const callback = function cb(data, args) {
+  const callback = function cb(data) {
     t.truthy(data.length >= 20, 'get data length 20');
     t.end();
   };
   opt.cb = callback;
   opt.args = null;
-  stock.getKData(opt);
+  stock.getKData(opt).then(callback).catch(err => {
+    t.truthy(false, util.format('long time getkdata error %s', err));
+  });
 });
 
 const _getTimeTick = ts => {
@@ -52,7 +54,7 @@ test.cb('Get short time index', t => {
   opt.ktype = '5';
   opt.start = sdate;
   opt.end = edate;
-  const callback = function cb(data, args) {
+  const callback = function cb(data) {
     let curtick;
     const stick = _getTimeTick(sdate);
     const etick = _getTimeTick(edate);
@@ -68,7 +70,10 @@ test.cb('Get short time index', t => {
   };
   opt.cb = callback;
   opt.args = null;
-  stock.getKData(opt);
+  stock.getKData(opt).then(callback).catch( err => {
+    t.truthy(false, util.format('short time index error %s', err));
+    t.end();
+  });
 });
 
 test.cb('get data for sequence', t => {
@@ -82,7 +87,7 @@ test.cb('get data for sequence', t => {
   opt.ktype = '5';
   opt.start = sdate;
   opt.end = edate;
-  const callback = function cb(data, args) {
+  const callback = function cb(data) {
     let curtick;
     let idx = 0;
     let lastval = 0;
@@ -101,5 +106,8 @@ test.cb('get data for sequence', t => {
   };
   opt.cb = callback;
   opt.args = null;
-  stock.getKData(opt);
+  stock.getKData(opt).then(callback).catch(err => {
+      t.truthy( false , util.format('get sequence error %s', err));
+      t.end();
+  });
 });

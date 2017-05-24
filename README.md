@@ -68,7 +68,7 @@ stock.getTick(options).then(({ data }) => {
 
 ### 获取历史K线数据
 ```
-const callback = function cb(data,args) {
+const callback = function cb(data) {
    console.log('code %s',args);
    console.log(data);
 };
@@ -77,10 +77,15 @@ const options = {
   index: true,
   start : '2015-01-01',
   end: '2016-10-22',
-  cb: callback,
   args: '000001'
 };
-stock.getKData(options);
+stock.getKData(options).then(data => {
+   console.log('code %s',options.code);
+   console.log(data);  
+  })
+  .catch(err => {
+    console.error('get %s error %s', options.code, err);
+    });
 ```
 
 `options` 参数说明：
@@ -89,8 +94,6 @@ stock.getKData(options);
   start: {string} 起始时间，格式YYYY-MM-DD
   end: {string} 结束时间，格式YYYY-MM-DD
   code: {string} 股票代码
-  cb: {function}  回调函数
-  args: {object}  回调使用的参数
   ktype: {string} K线类型 ('day','week','month','5','10','15','30','60')
   index: {bool}  表示是否是指数，默认是否
 }

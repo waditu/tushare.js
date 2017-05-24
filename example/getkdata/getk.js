@@ -27,12 +27,6 @@ const parser = extargsparse.ExtArgsParse();
 parser.load_command_line_string(command);
 const args = parser.parse_command_line();
 
-const debugFunction = function df(data,args) {
-	console.log('code %s',args);
-	data.forEach(function(d) {
-		console.log('%s',d);
-	});
-};
 
 args.args.forEach(function(code) {
 	let options = {};
@@ -41,8 +35,14 @@ args.args.forEach(function(code) {
 	options.end = args.end;
 	options.ktype = args.ktype;
 	options.autype = args.autype;
-	options.cb = debugFunction;
-	options.args = code;
 	options.index = args.index;
-	stock.getKData(options);
+	stock.getKData(options).then(data => {
+		console.log('code %s',code);
+		data.forEach(function(d) {
+			console.log('%s',d);
+		});			
+	})
+	.catch(err => {
+		console.error('get %s error %s', code, err);
+	});
 });
