@@ -65,7 +65,7 @@ const _getTimeTick = ts => {
   return retval;
 };
 
-const _findStoreIndex = (arr1,arr2) => {
+const _findStoreIndex = (arr1, arr2) => {
   let idx = 0;
   let minidx = 0;
   let maxidx = arr1.length - 1;
@@ -75,7 +75,7 @@ const _findStoreIndex = (arr1,arr2) => {
   let v1cur;
   let v2;
 
-  while( minidx < maxidx ) {
+  while (minidx < maxidx) {
     v1min = _getTimeTick(arr1[minidx][0]);
     v1max = _getTimeTick(arr1[maxidx][0]);
     v1cur = _getTimeTick(arr1[curidx][0]);
@@ -89,7 +89,7 @@ const _findStoreIndex = (arr1,arr2) => {
     }
 
     if ((minidx + 1) >= maxidx) {
-      /*this is the smallest one*/
+      /* this is the smallest one*/
       if (v1min < v2 && v1max > v2) {
         idx = (minidx);
         break;
@@ -103,47 +103,44 @@ const _findStoreIndex = (arr1,arr2) => {
       minidx = curidx;
     } else if (v1cur > v2) {
       maxidx = curidx;
-    } else if (v1cur == v2) {
+    } else if (v1cur === v2) {
       idx = curidx;
       break;
     }
-    
+
     curidx = Math.floor((minidx + maxidx) / 2);
   }
   return idx;
 };
 
-const _mergeArray = (arr1,arr2) => {
+const _mergeArray = (arr1, arr2) => {
   let _idx = 0;
-  _idx = _findStoreIndex(arr1,arr2);
-  arr2.forEach(function(d) {
-    arr1.splice(_idx,0,d);
+  _idx = _findStoreIndex(arr1, arr2);
+  arr2.forEach(d => {
+    arr1.splice(_idx, 0, d);
     _idx += 1;
   });
   return arr1;
 };
 
-const _storeListData = (res, listdata, ktype, code, callback = null) => {
-  res.buffer().then(buf => {
-    let s = buf.toString('ascii');
-    const sarr = s.split('=');
-    let sdict;
-    let l;
-    if (sarr.length > 1) {
-      s = sarr[1];
-      s = s.replace(/,\{"nd.*?\}/, '');
-      sdict = JSON.parse(s);
-      if ('data' in sdict && code in sdict['data'] && ktype in sdict['data'][code]) {
-        l = sdict['data'][code][ktype];
-        _mergeArray(listdata, l);
-      }
-      if (callback !== null) {
-        callback(listdata);
-      }
+const _storeListData = (ins, listdata, ktype, code, callback = null) => {
+  let s = '';
+  const sarr = ins.split('=');
+  let sdict;
+  let l;
+  if (sarr.length > 1) {
+    s = sarr[1];
+    s = s.replace(/,\{"nd.*?\}/, '');
+    sdict = JSON.parse(s);
+    if ('data' in sdict && code in sdict['data'] && ktype in sdict['data'][code]) {
+      l = sdict['data'][code][ktype];
+      _mergeArray(listdata, l);
     }
-  });
+    if (callback !== null) {
+      callback(listdata);
+    }
+  }
 };
-
 
 
 const _getSymbol = function getsym(options) {
@@ -158,14 +155,6 @@ const _getSymbol = function getsym(options) {
     symbol = codeToSymbol(options.code);
   }
   return symbol;
-};
-
-const _getAutype = function getautype(options) {
-  let autype = '';
-  if (options.autype !== null && options.autype !== '') {
-    autype = options.autype;
-  }
-  return autype;
 };
 
 const _getEDate = function getedate(options) {
@@ -250,10 +239,11 @@ const _getKDataLong = (options = {}) => {
   urls.forEach(elmurl => {
     fetch(elmurl)
       .then(checkStatus)
-      .then(res => {
+      .then(charset('ascii'))
+      .then(dictdata => {
         handledurls.push(elmurl);
         if (handledurls.length === urls.length) {
-          _storeListData(res, handleddata, options.ktype, symbol, setdata => {
+          _storeListData(dictdata, handleddata, options.ktype, symbol, setdata => {
             if (options.cb !== null) {
               const kdata = [];
               const stick = _getTimeTick(sdate);
@@ -265,12 +255,11 @@ const _getKDataLong = (options = {}) => {
                   kdata.push(curdata);
                 }
               });
-
               options.cb(kdata, options.args);
             }
           });
         } else {
-          _storeListData(res, handleddata, options.ktype, symbol);
+          _storeListData(dictdata, handleddata, options.ktype, symbol);
         }
       })
       .catch(error => {
@@ -281,12 +270,10 @@ const _getKDataLong = (options = {}) => {
 
 const _getKDataShort = (options = {}) => {
   let symbol = '';
-  const urls = [];
   let url = '';
   const sdate = options.start;
   let edate = options.end;
   let randomstr;
-  let handledurls = [];
   let handleddata = null;
   let ktype = '';
   symbol = _getSymbol(options);
@@ -295,44 +282,36 @@ const _getKDataShort = (options = {}) => {
   if (cons.K_MIN_LABELS.includes(options.ktype)) {
     randomstr = randomString(16);
     url = klineTTMinUrl(symbol, options.ktype, randomstr);
-    urls.push(url);
   } else {
     throw new Error(util.format('unknown ktype %s', options.ktype));
   }
 
   handleddata = [];
-  handledurls = [];
   ktype = util.format('m%s', options.ktype);
-  urls.forEach(elmurl => {
-    fetch(elmurl)
-      .then(checkStatus)
-      .then(res => {
-        handledurls.push(elmurl);
-        if (handledurls.length === urls.length) {
-          _storeListData(res, handleddata, ktype, symbol, setdata => {
-            if (options.cb !== null) {
-              const kdata = [];
-              const stick = _getTimeTick(sdate);
-              const etick = _getTimeTick(edate);
+  fetch(url)
+  .then(checkStatus)
+      .then(charset('ascii'))
+      .then(dictdata => {
+        _storeListData(dictdata, handleddata, ktype, symbol, setdata => {
+          if (options.cb !== null) {
+            const kdata = [];
+            const stick = _getTimeTick(sdate);
+            const etick = _getTimeTick(edate);
 
-              setdata.forEach(curdata => {
-                const curtick = _getTimeTick(curdata[0]);
-                if (curtick >= stick && curtick <= etick) {
-                  kdata.push(curdata);
-                }
-              });
+            setdata.forEach(curdata => {
+              const curtick = _getTimeTick(curdata[0]);
+              if (curtick >= stick && curtick <= etick) {
+                kdata.push(curdata);
+              }
+            });
 
-              options.cb(kdata, options.args);
-            }
-          });
-        } else {
-          _storeListData(res, handleddata, ktype, symbol);
-        }
+            options.cb(kdata, options.args);
+          }
+        });
       })
       .catch(error => {
-        throw new Error(util.format('error for %s %s', elmurl, error));
+        throw new Error(util.format('error for %s %s', url, error));
       });
-  });
 };
 
 
