@@ -124,9 +124,32 @@ const _getEDate = function getedate(options) {
   return edate;
 };
 
+const _getFq = function getfq(options) {
+  let fq = '';
+  if (options.autype !== null &&
+      options.autype !== '') {
+    fq = options.autype;
+  }
+
+  if (options.code[0] === '1' ||
+      options.code[0] === '5' ||
+      options.index) {
+    fq = '';
+  }
+  return fq;
+};
+
+const _getKline = function getkline(options) {
+  let kline = 'fq';
+  if (options.autype === null ||
+      options.autype === '') {
+    kline = '';
+  }
+  return kline;
+};
+
 
 const _getKDataLong = (options = {}) => {
-  let autype = '';
   let kline = '';
   let fq = '';
   let symbol = '';
@@ -143,42 +166,29 @@ const _getKDataLong = (options = {}) => {
   let handleddata = null;
 
   symbol = _getSymbol(options);
-  autype = _getAutype(options);
   edate = _getEDate(options);
+  kline = _getKline(options);
+  fq = _getFq(options);
 
-  if (autype !== '') {
-    kline = 'fq';
-  }
 
   if (cons.K_LABELS.includes(options.ktype)) {
-    if (autype !== '') {
-      fq = autype;
-    }
-    if ((options.code[0] === '1' ||
-        options.code[0] === '5') || options.index) {
-      fq = '';
-    }
-
-
     if ((sdate === null || sdate === '') &&
         (edate === null || edate === '')) {
       randomstr = randomString(17);
-      url = klineTTUrl('http://', 'gtimg.cn', kline, fq, symbol, options.ktype, sdate, edate, fq, randomstr);
+      url = klineTTUrl(kline, fq, symbol, options.ktype, sdate, edate, fq, randomstr);
       urls.push(url);
     } else {
       years = ttDates(sdate, edate);
       years.forEach(elm => {
         cursdate = util.format('%s-01-01', elm);
         curedate = util.format('%s-12-31', elm);
-        curfq = util.format('%s%s', fq, elm);
+        curfq = util.format('%s', elm);
 
         randomstr = randomString(17);
-        url = klineTTUrl('http://', 'gtimg.cn', kline, curfq, symbol, options.ktype, cursdate, curedate, fq, randomstr);
+        url = klineTTUrl(kline, curfq, symbol, options.ktype, cursdate, curedate, fq, randomstr);
         urls.push(url);
       });
     }
-  } else {
-    throw new Error(util.format('unknown ktype %s', options.ktype));
   }
 
   handleddata = [];
@@ -225,15 +235,12 @@ const _getKDataShort = (options = {}) => {
   let handledurls = [];
   let handleddata = null;
   let ktype = '';
-
-
   symbol = _getSymbol(options);
-
   edate = _getEDate(options);
 
   if (cons.K_MIN_LABELS.includes(options.ktype)) {
     randomstr = randomString(16);
-    url = klineTTMinUrl('http://', 'gtimg.cn', symbol, options.ktype, randomstr);
+    url = klineTTMinUrl(symbol, options.ktype, randomstr);
     urls.push(url);
   } else {
     throw new Error(util.format('unknown ktype %s', options.ktype));
@@ -253,7 +260,6 @@ const _getKDataShort = (options = {}) => {
               const kdata = [];
               const stick = _getTimeTick(sdate);
               const etick = _getTimeTick(edate);
-
 
               setdata.forEach(curdata => {
                 const curtick = _getTimeTickShort(curdata[0]);

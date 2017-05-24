@@ -8,6 +8,7 @@
     "build": "node ./node_modules/babel-cli/bin/babel.js src --out-dir lib",
     "build:watch": "node ./node_modules/babel-cli/bin/babel.js src --out-dir lib --watch",
     "prepublish": "npm run build",
+    "buildexample" : "node ./node_modules/babel-cli/bin/babel.js example --out-dir libexample",
     "lint": "node ./node_modules/eslint/bin/eslint.js src/"
   },
   "repository": {
@@ -46,7 +47,8 @@
     "eslint-config-airbnb": "^14.1.0",
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-jsx-a11y": "^4.0.0",
-    "eslint-plugin-react": "^6.9.0"
+    "eslint-plugin-react": "^6.9.0",
+    "extargsparse" : "^0.2.2"
   },
   "ava": {
     "require": [
