@@ -85,7 +85,6 @@ const getFq = ({ autype, code, isIndex }) => {
 
 const getKline = ({ autype }) => (autype ? 'fq' : '');
 
-/* eslint-disable no-eval */
 const parseKData = (rawData, ktype, code) => {
   const rawDataArray = rawData.split('=');
   if (rawDataArray.length > 1) {

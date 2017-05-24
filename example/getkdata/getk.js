@@ -35,12 +35,12 @@ args.args.forEach(function(code) {
 	options.end = args.end;
 	options.ktype = args.ktype;
 	options.autype = args.autype;
-	options.index = args.index;
+	options.isIndex = args.index;
 	stock.getKData(options).then(data => {
 		console.log('code %s',code);
 		data.forEach(function(d) {
 			console.log('%s',d);
-		});			
+		});
 	})
 	.catch(err => {
 		console.error('get %s error %s', code, err);
