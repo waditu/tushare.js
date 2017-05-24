@@ -1,6 +1,8 @@
+import parallel from 'async/parallel';
+import util from 'util';
+
 import { INDEX_LABELS, INDEX_LIST } from './cons';
 
-const util = require('util');
 
 export function codeToSymbol(code) {
   let symbol = '';
@@ -73,8 +75,31 @@ export const checkStatus = response => {
   throw error;
 };
 
+/**
+ * create a list of fetch tasks
+ * return [promise, promise, ...]
+ */
+export const createFetchTasks = urls =>
+  urls.map(url =>
+    fetch(url)
+    .then(checkStatus)
+    .then(res => res.text())
+  );
 
-export const getIfzqResult = body => {
-   let s = body.toString('ascii');
-   
-};
+/**
+ * @return [ [obj, obj, ...], [obj, obj, ...], ... ]
+ */
+export const runTasksInParallel = tasks =>
+  new Promise((resolve, reject) => {
+    parallel(
+      tasks.map(task => callback => task.then(data => callback(null, data))),
+      (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      }
+    );
+  });
+

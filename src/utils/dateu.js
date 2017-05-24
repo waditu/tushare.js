@@ -1,11 +1,3 @@
-const strftime = require('strftime');
-
-export function getToday() {
-  const d = new Date();
-  return strftime('%Y-%m-%d', d);
-}
-
-
 export function ttDates(sdate, edate) {
   const retyears = [];
   let iyear;

@@ -1,4 +1,4 @@
-import moment from 'moment';
+import strftime from 'strftime';
 
 export const K_TYPE = {
   day: 'akdaily',
@@ -12,17 +12,17 @@ export const K_LABELS = ['day', 'month', 'week'];
 export const K_MIN_LABELS = ['1', '5', '15', '30', '30'];
 
 export const INDEX_LIST = {
-  'sh': 'sh000001',
-  'sz': 'sz399001',
+  sh: 'sh000001',
+  sz: 'sz399001',
   hs300: 'sz399300',
   sz50: 'sh000016',
   zxb: 'sz399005',
   cyb: 'sz399006',
   zx300: 'sz399008',
   zh500: 'sh000905',
-  '399990': 'sz399990',
+  399990: 'sz399990',
   '000006': 'sh000006',
-  '399998': 'sz399998',
+  399998: 'sz399998',
   399436: 'sz399436',
   399678: 'sz399678',
   399804: 'sz399804',
@@ -589,6 +589,6 @@ export const INDEX_LIST = {
   hkHSI: 'hkHSI',
 };
 
-export const DATE_NOW = moment().format('YYYY-MM-DD');
+export const DATE_NOW = strftime('%Y-%m-%d', new Date());
 export const CUR_YEAR = DATE_NOW.split('-')[0];
 export const CUR_MONTH = DATE_NOW.split('-')[1];

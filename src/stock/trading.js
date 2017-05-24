@@ -1,3 +1,6 @@
+import { unnest } from 'ramda';
+import util from 'util';
+
 /* eslint-disable no-console */
 import {
   priceUrl,
@@ -12,12 +15,10 @@ import {
 } from './urls';
 
 import * as cons from './cons';
-import { codeToSymbol, checkStatus, DATE_NOW, randomString } from './util';
+import { codeToSymbol, checkStatus, DATE_NOW, randomString, runTasksInParallel, createFetchTasks } from './util';
 import { charset } from '../utils/charset';
 import '../utils/fetch';
-import { getToday, ttDates } from '../utils/dateu';
-
-const util = require('util');
+import { ttDates } from '../utils/dateu';
 
 /**
  * getHistory: 获取个股历史数据
@@ -51,7 +52,7 @@ export const getHistory = (query = {}) => {
   .catch(error => ({ error }));
 };
 
-const _getTimeTick = ts => {
+const getTimeTick = ts => {
   const sarr = ts.split('-');
   let retval = 0;
   if (sarr.length >= 3) {
@@ -65,252 +66,93 @@ const _getTimeTick = ts => {
   return retval;
 };
 
-const _findStoreIndex = (arr1, arr2) => {
-  let idx = 0;
-  let minidx = 0;
-  let maxidx = arr1.length - 1;
-  let curidx = Math.floor((minidx + maxidx) / 2);
-  let v1min;
-  let v1max;
-  let v1cur;
-  let v2;
-
-  while (minidx < maxidx) {
-    v1min = _getTimeTick(arr1[minidx][0]);
-    v1max = _getTimeTick(arr1[maxidx][0]);
-    v1cur = _getTimeTick(arr1[curidx][0]);
-    v2 = _getTimeTick(arr2[0][0]);
-    if (v1min >= v2) {
-      idx = 0;
-      break;
-    } else if (v1max <= v2) {
-      idx = (maxidx + 1);
-      break;
-    }
-
-    if ((minidx + 1) >= maxidx) {
-      /* this is the smallest one*/
-      if (v1min < v2 && v1max > v2) {
-        idx = (minidx);
-        break;
-      } else {
-        idx = (maxidx + 1);
-        break;
-      }
-    }
-
-    if (v1cur < v2) {
-      minidx = curidx;
-    } else if (v1cur > v2) {
-      maxidx = curidx;
-    } else if (v1cur === v2) {
-      idx = curidx;
-      break;
-    }
-
-    curidx = Math.floor((minidx + maxidx) / 2);
+const getSymbol = ({ code, isIndex }) => {
+  if (isIndex && code in cons.INDEX_LIST) {
+    return cons.INDEX_LIST[code];
   }
-  return idx;
+  return codeToSymbol(code);
 };
 
-const _mergeArray = (arr1, arr2) => {
-  let _idx = 0;
-  _idx = _findStoreIndex(arr1, arr2);
-  arr2.forEach(d => {
-    arr1.splice(_idx, 0, d);
-    _idx += 1;
-  });
-  return arr1;
-};
+const getEndDate = ({ start, end }) => (start && !end ? cons.DATE_NOW : end);
 
-const _storeListData = (ins, listdata, ktype, code, callback = null) => {
-  let s = '';
-  const sarr = ins.split('=');
-  let sdict;
-  let l;
-  if (sarr.length > 1) {
-    s = sarr[1];
-    s = s.replace(/,\{"nd.*?\}/, '');
-    sdict = JSON.parse(s);
-    if ('data' in sdict && code in sdict['data'] && ktype in sdict['data'][code]) {
-      l = sdict['data'][code][ktype];
-      _mergeArray(listdata, l);
-    }
-    if (callback !== null) {
-      callback(listdata);
-    }
-  }
-};
-
-
-const _getSymbol = function getsym(options) {
-  let symbol = '';
-  if (options.index) {
-    if (options.code in cons.INDEX_LIST) {
-      symbol = cons.INDEX_LIST[options.code];
-    } else {
-      symbol = codeToSymbol(options.code);
-    }
-  } else {
-    symbol = codeToSymbol(options.code);
-  }
-  return symbol;
-};
-
-const _getEDate = function getedate(options) {
-  let edate = options.end;
-  if (options.start !== null && options.start !== '') {
-    if (options.end === null || options.end === '') {
-      edate = getToday();
-    }
-  }
-  return edate;
-};
-
-const _getFq = function getfq(options) {
-  let fq = '';
-  if (options.autype !== null &&
-      options.autype !== '') {
-    fq = options.autype;
-  }
-
-  if (options.code[0] === '1' ||
-      options.code[0] === '5' ||
-      options.index) {
+const getFq = ({ autype, code, isIndex }) => {
+  let fq = autype || '';
+  if (code[0] === '1' || code[0] === '5' || isIndex) {
     fq = '';
   }
   return fq;
 };
 
-const _getKline = function getkline(options) {
-  let kline = 'fq';
-  if (options.autype === null ||
-      options.autype === '') {
-    kline = '';
-  }
-  return kline;
-};
+const getKline = ({ autype }) => (autype ? 'fq' : '');
 
-
-const _getKDataLong = (options = {}) => {
-  let kline = '';
-  let fq = '';
-  let symbol = '';
-  const urls = [];
-  let url = '';
-  let years = [];
-  let curfq = '';
-  let cursdate;
-  let curedate;
-  const sdate = options.start;
-  let edate = options.end;
-  let randomstr;
-  let handledurls = [];
-  let handleddata = null;
-
-  symbol = _getSymbol(options);
-  edate = _getEDate(options);
-  kline = _getKline(options);
-  fq = _getFq(options);
-
-
-  if (cons.K_LABELS.includes(options.ktype)) {
-    if ((sdate === null || sdate === '') &&
-        (edate === null || edate === '')) {
-      randomstr = randomString(17);
-      url = klineTTUrl(kline, fq, symbol, options.ktype, sdate, edate, fq, randomstr);
-      urls.push(url);
-    } else {
-      years = ttDates(sdate, edate);
-      years.forEach(elm => {
-        cursdate = util.format('%s-01-01', elm);
-        curedate = util.format('%s-12-31', elm);
-        curfq = util.format('%s', elm);
-
-        randomstr = randomString(17);
-        url = klineTTUrl(kline, curfq, symbol, options.ktype, cursdate, curedate, fq, randomstr);
-        urls.push(url);
-      });
+/* eslint-disable no-eval */
+const parseKData = (rawData, ktype, code) => {
+  const rawDataArray = rawData.split('=');
+  if (rawDataArray.length > 1) {
+    const json = JSON.parse(rawDataArray[1].replace(/,\{"nd.*?\}/, ''));
+    if ('data' in json && code in json['data'] && ktype in json['data'][code]) {
+      return json['data'][code][ktype];
     }
   }
-
-  handleddata = [];
-  handledurls = [];
-  return new Promise((resolve, reject) => {
-    urls.forEach(elmurl => {
-      fetch(elmurl)
-        .then(checkStatus)
-        .then(charset('ascii'))
-        .then(dictdata => {
-          handledurls.push(elmurl);
-          if (handledurls.length === urls.length) {
-            _storeListData(dictdata, handleddata, options.ktype, symbol, setdata => {
-              const kdata = [];
-              const stick = _getTimeTick(sdate);
-              const etick = _getTimeTick(edate);
-
-              setdata.forEach(curdata => {
-                const curtick = _getTimeTick(curdata[0]);
-                if (curtick >= stick && curtick <= etick) {
-                  kdata.push(curdata);
-                }
-              });
-              resolve(kdata);
-            });
-          } else {
-            _storeListData(dictdata, handleddata, options.ktype, symbol);
-          }
-        })
-        .catch(err => {
-          reject(err);
-        });
-    });
-  });
+  return [];
 };
 
-const _getKDataShort = (options = {}) => {
-  let symbol = '';
-  let url = '';
-  const sdate = options.start;
-  let edate = options.end;
-  let randomstr;
-  let handleddata = null;
-  let ktype = '';
-  symbol = _getSymbol(options);
-  edate = _getEDate(options);
-
-  if (cons.K_MIN_LABELS.includes(options.ktype)) {
-    randomstr = randomString(16);
-    url = klineTTMinUrl(symbol, options.ktype, randomstr);
-  } else {
+const getKDataLong = (options = {}) => {
+  if (!cons.K_LABELS.includes(options.ktype)) {
     throw new Error(util.format('unknown ktype %s', options.ktype));
   }
 
-  handleddata = [];
-  ktype = util.format('m%s', options.ktype);
-  return new Promise((resolve, reject) => {
-    fetch(url)
-      .then(checkStatus)
-      .then(charset('ascii'))
-      .then(dictdata => {
-        _storeListData(dictdata, handleddata, ktype, symbol, setdata => {
-          const kdata = [];
-          const stick = _getTimeTick(sdate);
-          const etick = _getTimeTick(edate);
+  const kline = getKline(options);
+  const fq = getFq(options);
+  const symbol = getSymbol(options);
+  const sdate = options.start;
+  const edate = getEndDate(options);
+  let urls = [];
 
-          setdata.forEach(curdata => {
-            const curtick = _getTimeTick(curdata[0]);
-            if (curtick >= stick && curtick <= etick) {
-              kdata.push(curdata);
-            }
-          });
-          resolve(kdata);
-        });
-      })
-      .catch(err => {
-        reject(err);
-      });
-  });
+  if (!sdate && !edate) {
+    const randomstr = randomString(17);
+    const url = klineTTUrl(kline, fq, symbol, options.ktype, sdate, edate, fq, randomstr);
+    urls = urls.concat(url);
+  } else {
+    const years = ttDates(sdate, edate);
+    urls = years.map(year => {
+      const startOfYear = util.format('%s-01-01', year);
+      const endOfYear = util.format('%s-12-31', year);
+
+      const randomstr = randomString(17);
+      return klineTTUrl(kline, year, symbol, options.ktype, startOfYear,
+        endOfYear, fq, randomstr);
+    });
+  }
+
+  const tasks = createFetchTasks(urls);
+  return runTasksInParallel(tasks)
+    .then(results => results.map(dataStr => parseKData(dataStr, options.ktype, symbol)))
+    .then(unnest);
+};
+
+const getKDataShort = (options = {}) => {
+  if (!cons.K_MIN_LABELS.includes(options.ktype)) {
+    throw new Error(util.format('unknown ktype %s', options.ktype));
+  }
+
+  const symbol = getSymbol(options);
+  const sdate = options.start;
+  const edate = getEndDate(options);
+  const randomstr = randomString(16);
+  const ktype = util.format('m%s', options.ktype);
+  const url = klineTTMinUrl(symbol, options.ktype, randomstr);
+
+  return fetch(url)
+    .then(checkStatus)
+    .then(res => res.text())
+    .then(dataStr => parseKData(dataStr, ktype, symbol))
+    .then(data => data.filter(tick => {
+      const stick = getTimeTick(sdate);
+      const etick = getTimeTick(edate);
+      const curtick = getTimeTick(tick[0]);
+      return curtick >= stick && curtick <= etick;
+    }));
 };
 
 
@@ -324,17 +166,17 @@ const _getKDataShort = (options = {}) => {
  * @param {String} options.end - 结束日期 format：YYYY-MM-DD 为空时取到最近一个交易日数据
  * @param {String} options.ktype - 数据类型，day=日k线 week=周 month=月 5=5分钟 15=15分钟 30=30分钟 60=60分钟，默认为day
  * @param {String} options.autype - 复权类型，默认前复权, fq=前复权, last=不复权
- * @param {Bool}   options.index - 是否为指数，默认为false
+ * @param {Bool}   options.isIndex - 是否为指数，默认为false
  * @return {Promise object}      Promise Object 可以调用 then catch函数
  */
 export const getKData = (query = {}) => {
   const defaults = {
     code: null,
-    start: null,
-    end: null,
+    start: '',
+    end: '',
     ktype: 'day',
     autype: 'fq',
-    index: false,
+    isIndex: false,
   };
 
 
@@ -342,11 +184,11 @@ export const getKData = (query = {}) => {
 
 
   if (cons.K_LABELS.includes(options.ktype)) {
-    return _getKDataLong(options);
+    return getKDataLong(options);
   }
 
   if (cons.K_MIN_LABELS.includes(options.ktype)) {
-    return _getKDataShort(options);
+    return getKDataShort(options);
   }
 
   throw new Error(util.format('not supported ktype %s', options.ktype));
