@@ -28,6 +28,8 @@ const _getTimeTick = ts => {
     retval += parseInt(sarr[1], 10) * 100;
     retval += parseInt(sarr[2], 10);
     retval *= 10000;
+  } else {
+    retval += parseInt(ts, 10);
   }
   return retval;
 };
@@ -62,6 +64,39 @@ test.cb('Get short time index', t => {
       t.truthy(curtick >= stick && curtick <= etick, util.format('%s >= %s && %s <= %s', curtick, stick, curtick, etick));
       idx += 1;
     }
+    t.end();
+  };
+  opt.cb = callback;
+  opt.args = null;
+  stock.getKData(opt);
+});
+
+test.cb('get data for sequence', t => {
+  const opt = {};
+  const etime = new Date();
+  const stime = new Date(etime.getTime() - (24 * 365 * 3600 * 1000));
+  const sdate = strftime('%Y-%d-%m', stime);
+  const edate = strftime('%Y-%d-%m', etime);
+  opt.code = '000001';
+  opt.index = true;
+  opt.ktype = '5';
+  opt.start = sdate;
+  opt.end = edate;
+  const callback = function cb(data, args) {
+    let curtick;
+    let idx = 0;
+    let lastval = 0;
+    let curval = 0;
+    let lastd;
+    t.truthy(data.length >= 20, 'get data for index');
+    lastd = '';
+    data.forEach(function(d) {
+      curval = _getTimeTick(d[0]);
+      t.truthy(curval >= lastval, util.format('%s for %s not sequence', lastd, d));
+      lastval = curval;
+      lastd = d;
+    });
+
     t.end();
   };
   opt.cb = callback;

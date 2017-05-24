@@ -51,6 +51,78 @@ export const getHistory = (query = {}) => {
   .catch(error => ({ error }));
 };
 
+const _getTimeTick = ts => {
+  const sarr = ts.split('-');
+  let retval = 0;
+  if (sarr.length >= 3) {
+    retval += parseInt(sarr[0], 10) * 100 * 100;
+    retval += parseInt(sarr[1], 10) * 100;
+    retval += parseInt(sarr[2], 10);
+    retval *= 10000;
+  } else {
+    retval += parseInt(ts, 10);
+  }
+  return retval;
+};
+
+const _findStoreIndex = (arr1,arr2) => {
+  let idx = 0;
+  let minidx = 0;
+  let maxidx = arr1.length - 1;
+  let curidx = Math.floor((minidx + maxidx) / 2);
+  let v1min;
+  let v1max;
+  let v1cur;
+  let v2;
+
+  while( minidx < maxidx ) {
+    v1min = _getTimeTick(arr1[minidx][0]);
+    v1max = _getTimeTick(arr1[maxidx][0]);
+    v1cur = _getTimeTick(arr1[curidx][0]);
+    v2 = _getTimeTick(arr2[0][0]);
+    if (v1min >= v2) {
+      idx = 0;
+      break;
+    } else if (v1max <= v2) {
+      idx = (maxidx + 1);
+      break;
+    }
+
+    if ((minidx + 1) >= maxidx) {
+      /*this is the smallest one*/
+      if (v1min < v2 && v1max > v2) {
+        idx = (minidx);
+        break;
+      } else {
+        idx = (maxidx + 1);
+        break;
+      }
+    }
+
+    if (v1cur < v2) {
+      minidx = curidx;
+    } else if (v1cur > v2) {
+      maxidx = curidx;
+    } else if (v1cur == v2) {
+      idx = curidx;
+      break;
+    }
+    
+    curidx = Math.floor((minidx + maxidx) / 2);
+  }
+  return idx;
+};
+
+const _mergeArray = (arr1,arr2) => {
+  let _idx = 0;
+  _idx = _findStoreIndex(arr1,arr2);
+  arr2.forEach(function(d) {
+    arr1.splice(_idx,0,d);
+    _idx += 1;
+  });
+  return arr1;
+};
+
 const _storeListData = (res, listdata, ktype, code, callback = null) => {
   res.buffer().then(buf => {
     let s = buf.toString('ascii');
@@ -63,9 +135,7 @@ const _storeListData = (res, listdata, ktype, code, callback = null) => {
       sdict = JSON.parse(s);
       if ('data' in sdict && code in sdict['data'] && ktype in sdict['data'][code]) {
         l = sdict['data'][code][ktype];
-        l.forEach(c => {
-          listdata.push(c);
-        });
+        _mergeArray(listdata, l);
       }
       if (callback !== null) {
         callback(listdata);
@@ -74,23 +144,7 @@ const _storeListData = (res, listdata, ktype, code, callback = null) => {
   });
 };
 
-const _getTimeTick = ts => {
-  const sarr = ts.split('-');
-  let retval = 0;
-  if (sarr.length >= 3) {
-    retval += parseInt(sarr[0], 10) * 100 * 100;
-    retval += parseInt(sarr[1], 10) * 100;
-    retval += parseInt(sarr[2], 10);
-    retval *= 10000;
-  }
-  return retval;
-};
 
-const _getTimeTickShort = ts => {
-  let retval = 0;
-  retval += parseInt(ts, 10);
-  return retval;
-};
 
 const _getSymbol = function getsym(options) {
   let symbol = '';
@@ -262,7 +316,7 @@ const _getKDataShort = (options = {}) => {
               const etick = _getTimeTick(edate);
 
               setdata.forEach(curdata => {
-                const curtick = _getTimeTickShort(curdata[0]);
+                const curtick = _getTimeTick(curdata[0]);
                 if (curtick >= stick && curtick <= etick) {
                   kdata.push(curdata);
                 }
