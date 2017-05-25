@@ -68,10 +68,6 @@ stock.getTick(options).then(({ data }) => {
 
 ### 获取历史K线数据
 ```
-const callback = function cb(data) {
-   console.log('code %s',args);
-   console.log(data);
-};
 const options = {
   code: '000001',
   index: true,
@@ -85,7 +81,7 @@ stock.getKData(options).then(data => {
   })
   .catch(err => {
     console.error('get %s error %s', options.code, err);
-    });
+  });
 ```
 
 `options` 参数说明：
