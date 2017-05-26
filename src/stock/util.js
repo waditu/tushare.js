@@ -1,4 +1,8 @@
+import parallel from 'async/parallel';
+import util from 'util';
+
 import { INDEX_LABELS, INDEX_LIST } from './cons';
+
 
 export function codeToSymbol(code) {
   let symbol = '';
@@ -46,6 +50,21 @@ export function arrayObjectMapping(fields, items) {
   });
 }
 
+const _pow = (base, exp) => {
+  let _b = base;
+  for (let _i = 0; _i < exp; _i += 1) {
+    _b *= base;
+  }
+  return _b;
+};
+
+export function randomString(num) {
+  const lower = _pow(10, (num - 1));
+  const upper = _pow(10, num) - 1;
+  const rnum = lower + (Math.random() * (upper - lower));
+  return util.format('%s', rnum);
+}
+
 export const checkStatus = response => {
   if (response.status >= 200 && response.status < 300) {
     return response;
@@ -55,3 +74,32 @@ export const checkStatus = response => {
   error.response = response;
   throw error;
 };
+
+/**
+ * create a list of fetch tasks
+ * return [promise, promise, ...]
+ */
+export const createFetchTasks = urls =>
+  urls.map(url =>
+    fetch(url)
+    .then(checkStatus)
+    .then(res => res.text())
+  );
+
+/**
+ * @return [ [obj, obj, ...], [obj, obj, ...], ... ]
+ */
+export const runTasksInParallel = tasks =>
+  new Promise((resolve, reject) => {
+    parallel(
+      tasks.map(task => callback => task.then(data => callback(null, data))),
+      (err, results) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      }
+    );
+  });
+

@@ -4,11 +4,12 @@
   "description": "port of tushare for nodejs",
   "main": "lib/index.js",
   "scripts": {
-    "test": "./node_modules/.bin/ava --verbose test/*",
-    "build": "./node_modules/babel-cli/bin/babel.js src --out-dir lib",
-    "build:watch": "./node_modules/babel-cli/bin/babel.js src --out-dir lib --watch",
+    "test": "node ./node_modules/ava/cli.js --verbose test/*",
+    "build": "node ./node_modules/babel-cli/bin/babel.js src --out-dir lib",
+    "build:watch": "node ./node_modules/babel-cli/bin/babel.js src --out-dir lib --watch",
     "prepublish": "npm run build",
-    "lint": "./node_modules/.bin/eslint src/"
+    "buildexample": "node ./node_modules/babel-cli/bin/babel.js example --out-dir libexample",
+    "lint": "node ./node_modules/eslint/bin/eslint.js src/"
   },
   "repository": {
     "type": "git",
@@ -25,10 +26,12 @@
   },
   "homepage": "https://github.com/ruanyl/tushare.js#readme",
   "dependencies": {
+    "async": "^2.4.1",
     "iconv-lite": "^0.4.15",
     "js-base64": "^2.1.9",
-    "moment": "^2.17.1",
     "no-fetch": "^1.6.2",
+    "ramda": "^0.23.0",
+    "strftime": "^0.10.0",
     "whatwg-fetch": "^2.0.2"
   },
   "devDependencies": {
@@ -45,7 +48,8 @@
     "eslint-config-airbnb": "^14.1.0",
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-jsx-a11y": "^4.0.0",
-    "eslint-plugin-react": "^6.9.0"
+    "eslint-plugin-react": "^6.9.0",
+    "extargsparse": "^0.2.2"
   },
   "ava": {
     "require": [

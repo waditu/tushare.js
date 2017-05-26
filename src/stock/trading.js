@@ -1,3 +1,7 @@
+import { unnest } from 'ramda';
+import util from 'util';
+
+/* eslint-disable no-console */
 import {
   priceUrl,
   tickUrl,
@@ -6,10 +10,15 @@ import {
   todayTickUrl,
   indexUrl,
   sinaDDUrl,
+  klineTTUrl,
+  klineTTMinUrl,
 } from './urls';
-import { codeToSymbol, checkStatus, DATE_NOW } from './util';
+
+import * as cons from './cons';
+import { codeToSymbol, checkStatus, DATE_NOW, randomString, runTasksInParallel, createFetchTasks } from './util';
 import { charset } from '../utils/charset';
 import '../utils/fetch';
+import { ttDates } from '../utils/dateu';
 
 /**
  * getHistory: 获取个股历史数据
@@ -21,7 +30,6 @@ import '../utils/fetch';
  * @param {String} options.end - 结束日期 format：YYYY-MM-DD 为空时取到最近一个交易日数据
  * @param {String} options.ktype - 数据类型，day=日k线 week=周 month=月 5=5分钟 15=15分钟 30=30分钟 60=60分钟，默认为day
  * @param {String} options.autype - 复权类型，默认前复权, fq=前复权, last=不复权
- * @param cb
  * @return {undefined}
  */
 export const getHistory = (query = {}) => {
@@ -43,6 +51,148 @@ export const getHistory = (query = {}) => {
   .then(json => ({ data: json }))
   .catch(error => ({ error }));
 };
+
+const getTimeTick = ts => {
+  const sarr = ts.split('-');
+  let retval = 0;
+  if (sarr.length >= 3) {
+    retval += parseInt(sarr[0], 10) * 100 * 100;
+    retval += parseInt(sarr[1], 10) * 100;
+    retval += parseInt(sarr[2], 10);
+    retval *= 10000;
+  } else {
+    retval += parseInt(ts, 10);
+  }
+  return retval;
+};
+
+const getSymbol = ({ code, isIndex }) => {
+  if (isIndex && code in cons.INDEX_LIST) {
+    return cons.INDEX_LIST[code];
+  }
+  return codeToSymbol(code);
+};
+
+const getEndDate = ({ start, end }) => (start && !end ? cons.DATE_NOW : end);
+
+const getFq = ({ autype, code, isIndex }) => {
+  let fq = autype || '';
+  if (code[0] === '1' || code[0] === '5' || isIndex) {
+    fq = '';
+  }
+  return fq;
+};
+
+const getKline = ({ autype }) => (autype ? 'fq' : '');
+
+const parseKData = (rawData, ktype, code) => {
+  const rawDataArray = rawData.split('=');
+  if (rawDataArray.length > 1) {
+    const json = JSON.parse(rawDataArray[1].replace(/,\{"nd.*?\}/, ''));
+    if ('data' in json && code in json['data'] && ktype in json['data'][code]) {
+      return json['data'][code][ktype];
+    }
+  }
+  return [];
+};
+
+const getKDataLong = (options = {}) => {
+  if (!cons.K_LABELS.includes(options.ktype)) {
+    throw new Error(util.format('unknown ktype %s', options.ktype));
+  }
+
+  const kline = getKline(options);
+  const fq = getFq(options);
+  const symbol = getSymbol(options);
+  const sdate = options.start;
+  const edate = getEndDate(options);
+  let urls = [];
+
+  if (!sdate && !edate) {
+    const randomstr = randomString(17);
+    const url = klineTTUrl(kline, fq, symbol, options.ktype, sdate, edate, fq, randomstr);
+    urls = urls.concat(url);
+  } else {
+    const years = ttDates(sdate, edate);
+    urls = years.map(year => {
+      const startOfYear = util.format('%s-01-01', year);
+      const endOfYear = util.format('%s-12-31', year);
+
+      const randomstr = randomString(17);
+      return klineTTUrl(kline, year, symbol, options.ktype, startOfYear,
+        endOfYear, fq, randomstr);
+    });
+  }
+
+  const tasks = createFetchTasks(urls);
+  return runTasksInParallel(tasks)
+    .then(results => results.map(dataStr => parseKData(dataStr, options.ktype, symbol)))
+    .then(unnest);
+};
+
+const getKDataShort = (options = {}) => {
+  if (!cons.K_MIN_LABELS.includes(options.ktype)) {
+    throw new Error(util.format('unknown ktype %s', options.ktype));
+  }
+
+  const symbol = getSymbol(options);
+  const sdate = options.start;
+  const edate = getEndDate(options);
+  const randomstr = randomString(16);
+  const ktype = util.format('m%s', options.ktype);
+  const url = klineTTMinUrl(symbol, options.ktype, randomstr);
+
+  return fetch(url)
+    .then(checkStatus)
+    .then(res => res.text())
+    .then(dataStr => parseKData(dataStr, ktype, symbol))
+    .then(data => data.filter(tick => {
+      const stick = getTimeTick(sdate);
+      const etick = getTimeTick(edate);
+      const curtick = getTimeTick(tick[0]);
+      return curtick >= stick && curtick <= etick;
+    }));
+};
+
+
+/**
+ * getKData: 获取k线数据
+ * 返回数据格式 - 日期 ，开盘价， 最高价， 收盘价， 最低价， 成交量， 价格变动 ，涨跌幅，5日均价，10日均价，20日均价，5日均量，10日均量，20日均量，换手率
+ *
+ * @param {Object} options = {} - options
+ * @param {String} options.code - 股票代码, 例如： '600848'
+ * @param {String} options.start - 开始日期 format：YYYY-MM-DD 为空时取到API所提供的最早日期数据
+ * @param {String} options.end - 结束日期 format：YYYY-MM-DD 为空时取到最近一个交易日数据
+ * @param {String} options.ktype - 数据类型，day=日k线 week=周 month=月 5=5分钟 15=15分钟 30=30分钟 60=60分钟，默认为day
+ * @param {String} options.autype - 复权类型，默认前复权, fq=前复权, last=不复权
+ * @param {Bool}   options.isIndex - 是否为指数，默认为false
+ * @return {Promise object}      Promise Object 可以调用 then catch函数
+ */
+export const getKData = (query = {}) => {
+  const defaults = {
+    code: null,
+    start: '',
+    end: '',
+    ktype: 'day',
+    autype: 'fq',
+    isIndex: false,
+  };
+
+
+  const options = Object.assign({}, defaults, query);
+
+
+  if (cons.K_LABELS.includes(options.ktype)) {
+    return getKDataLong(options);
+  }
+
+  if (cons.K_MIN_LABELS.includes(options.ktype)) {
+    return getKDataShort(options);
+  }
+
+  throw new Error(util.format('not supported ktype %s', options.ktype));
+};
+
 
 /**
  * getTick - 获取历史分笔数据
